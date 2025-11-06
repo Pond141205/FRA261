@@ -45,7 +45,7 @@ class SiloData(db.Model):
     batch_id = db.Column(db.String(100)) #(e.g., S001_01_20251001_22)
     total_chunks = db.Column(db.Integer)
     chunk_id = db.Column(db.Integer)
-    point_cloud_json = db.Column(db.Text)
+    point_cloud = db.Column(db.Text)
 
     __table_args__ = (db.UniqueConstraint('batch_id', 'chunk_id', name='_batch_chunk_uc'),) # Ensure unique chunk per batch
 
@@ -85,69 +85,54 @@ with app.app_context():
 # -------------------------------
 # Merge Logic 
 # -------------------------------
-# ... (try_merge function remains the same) ...
 merged_batches = set()
 
 def try_merge(batch_id, total_chunks, device_id):
-    """
-    Checks if a batch is complete and merges it.
-    Args:
-        batch_id (str): The unique ID (device_id_YYYYMMDD_HH) for the batch.
-        total_chunks (int): The expected total number of chunks.
-    """
-    
-    # 1. Check if the batch has already been processed
     if batch_id in merged_batches:
         return None
 
-    # 2. Query all chunks belonging to this specific batch_id
     chunks = SiloData.query.filter_by(batch_id=batch_id).order_by(SiloData.chunk_id).all()
     
     current_chunk_count = len(chunks)
     
     if total_chunks is None or total_chunks == 0:
-        # Should not happen if total_chunks is sent correctly, but defensive check
         print(f"[{device_id}] total_chunks not set in payload!")
         return None
         
     if current_chunk_count != total_chunks:
-        # Not all chunks have arrived yet
         print(f"[{device_id}] Waiting for all chunks: {current_chunk_count}/{total_chunks}")
         return None
 
-    # --- Merge Logic (Complete batch found) ---
-    # Use the timestamp from the first chunk as the official batch time
+    # --- MODIFIED Merge Logic ---
     batch_timestamp = chunks[0].timestamp 
     
-    # Merge all points
-    all_points = []
+    # Merge all text chunks by joining them
+    all_points_text = ""
     for c in chunks:
-        try:
-            points_data = json.loads(c.point_cloud_json)
-            all_points.extend(points_data)
-        except (TypeError, json.JSONDecodeError) as e:
-            print(f"Error decoding JSON for chunk {c.chunk_id} in batch {batch_id}: {e}")
-            return None
+        # c.point_cloud_json already contains the raw text
+        all_points_text += c.point_cloud
+        
+    # Estimate total points by counting lines
+    total_points = len(all_points_text.splitlines())
+    
+    print(f"[{device_id}] Merge complete: ~{total_points} points")
 
-    merged_array = np.array(all_points)
-    print(f"[{device_id}] Merge complete: {merged_array.shape[0]} points")
-
-    # Save merged
+    # Save merged text
     merged_record = MergedData(
         timestamp=batch_timestamp,
         device_id=device_id,
         batch_id=batch_id,
-        total_points=merged_array.shape[0], 
-        merged_points=json.dumps(all_points)
+        total_points=total_points, 
+        merged_points=all_points_text # Save the combined text
     )
     
     try:
         db.session.add(merged_record)
         db.session.commit()
-        
-        # Mark the batch ID as merged
         merged_batches.add(batch_id) 
-        return merged_array
+        # We return the text, but you can change this to return the np.array
+        # if you parse it here. For now, just confirming merge.
+        return True 
         
     except Exception as e:
         db.session.rollback()
@@ -159,96 +144,82 @@ def try_merge(batch_id, total_chunks, device_id):
 # -------------------------------
 @app.route("/upload_chunk", methods=["POST"])
 def upload_chunk():
-    device_id = "UNKNOWN_DEVICE" # Default value in case of early error
-    calculated_batch_id = None # Initialize to a safe value
-    total_chunks = None # Initialize to a safe value
-
-    # Flag to track if the chunk was new or a duplicate
-    is_duplicate_chunk = False 
+    device_id = "UNKNOWN_DEVICE"
+    calculated_batch_id = None
+    total_chunks = None
     
     try:
-        # Expecting device_id in headers
-        device_id = request.headers.get("X-Device-ID") or request.headers.get("X-Device-Id")
+        # 1. Get headers (these are all strings)
+        device_id = request.headers.get("X-Device-ID")
+        total_chunks_str = request.headers.get("X-Total-Chunks")
+        chunk_id_str = request.headers.get("X-Chunk-ID")
+        
+        # print(f"\n--- New Request Headers ---")
+        # print(f"X-Device-ID: {device_id}")
+
         if not device_id:
-            # If device_id is missing, this block executes and returns 400.
-            return jsonify({"status":"error","msg":"Missing device_id header"}), 400
+            return jsonify({"status":"error","msg":"Missing X-Device-ID header"}), 400
+        if not total_chunks_str or not chunk_id_str:
+            return jsonify({"status":"error","msg":"Missing chunk headers"}), 400
+
+        # 2. Get the raw text data
+        # We decode the raw bytes (request.data) into a text string
+        point_data = request.data.decode('utf-8')
+        if not point_data:
+             return jsonify({"status":"error","msg":"Empty payload"}), 400
+        
+        # 3. Convert headers to integer
+        try:
+            total_chunks = int(total_chunks_str)
+            chunk_id = int(chunk_id_str)
+        except ValueError:
+            return jsonify({"status":"error","msg":"Invalid chunk header values"}), 400
 
         silo = SiloMeta.query.filter_by(device_id=device_id).first()
         if not silo:
             return jsonify({"status":"error","msg":"Unknown device_id"}), 400
 
-        data = request.get_json()
-        if not data or "chunk" not in data:
-            return jsonify({"status":"error","msg":"Invalid JSON payload"}), 400
-
-        chunk = data["chunk"]
-        total_chunks = chunk.get("total_chunks")
-        chunk_id = chunk.get("chunk_id")
-        points = chunk.get("points")
-
-        if points is None:
-            return jsonify({"status":"error","msg":"Missing points in chunk"}), 400
-        
-        # Define Thailand timezone
+        # 4. Generate batch ID
         thailand_tz = pytz.timezone('Asia/Bangkok')
-        
         current_time_utc = datetime.now(timezone.utc)
         current_time_thailand = current_time_utc.astimezone(thailand_tz)
-
-        # Format: device_id_YYYYMMDD_HH (e.g., S001_01_20251001_22)
         date_hour_str = current_time_thailand.strftime('%Y%m%d_%H')
         calculated_batch_id = f"{device_id}_{date_hour_str}"
         
-        
-        # Save to DB
+        # 5. Save the raw text chunk to DB
         record = SiloData(
             device_id = silo.device_id,
             batch_id = calculated_batch_id,
             timestamp = current_time_thailand,
-            total_chunks = chunk.get("total_chunks"),
-            chunk_id = chunk.get("chunk_id"),
-            point_cloud_json = json.dumps(chunk.get("points"))
+            total_chunks = total_chunks,
+            chunk_id = chunk_id,
+            point_cloud = point_data # Store the raw text
         )
         
-        # --- CRITICAL DATABASE WRITE SECTION ---
         try:
             db.session.add(record)
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            is_duplicate_chunk = True
             print(f"Chunk {chunk_id}/{total_chunks} from {device_id} ALREADY EXISTS. Checking for merge.")
-            
         except Exception as e:
-            # Ensure rollback on failure to clear the session and release locks
             db.session.rollback()
-            raise e # Re-raise the exception to be caught by the outer block
-       
+            raise e 
+        
         print(f"Received chunk {chunk_id}/{total_chunks} from {device_id} (Batch: {calculated_batch_id})")
 
-        # -----------------------------------------------------
-        # Call try_merge after successful commit
-        # The try_merge function filters based on device_id and exact timestamp.
-        # We pass the device_id and the timestamp we just used for the insert.
-        merged_array = try_merge(calculated_batch_id, total_chunks, device_id)
+        # 6. Call try_merge
+        merge_success = try_merge(calculated_batch_id, total_chunks, device_id)
 
-        if merged_array is not None:
-             return jsonify({"status":"ok","msg":f"Chunk {chunk_id} saved. Batch **MERGED** successfully."})
-        elif 'already exists' in request.args.get('msg', '').lower():
-             return jsonify({"status":"ok","msg":f"Chunk {chunk_id} already saved. Waiting for merge."})
+        if merge_success:
+            return jsonify({"status":"ok","msg":f"Chunk {chunk_id} saved. Batch MERGED successfully."})
         else:
-             return jsonify({"status":"ok","msg":f"Chunk {chunk_id} saved. Waiting for more chunks."})
-        # -----------------------------------------------------
-        
+            return jsonify({"status":"ok","msg":f"Chunk {chunk_id} saved. Waiting for more chunks."})
+            
     except Exception as e:
-        # db.session.rollback() is already called in the nested try/except, 
-        # but a catch-all is good practice here.
-        # If the error was from try_merge (which includes a rollback), this is fine.
-        
         print(f"Exception for device {device_id}:", e)
         if "database is locked" in str(e):
-             return jsonify({"status":"error","msg":"Database is temporarily busy. Please retry shortly."}), 503
-
+            return jsonify({"status":"error","msg":"Database is temporarily busy. Please retry shortly."}), 503
         return jsonify({"status":"error","msg":str(e)}), 500
 
 
