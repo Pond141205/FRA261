@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin Login - TeaEra Cafe</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="admin_login.css">
+</head>
+<body>
+<div class="login-wrapper">
+    <div class="card">
+        <aside class="brand-panel">
+            <div class="brand-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/th/d/de/%E0%B8%AA%E0%B8%B4%E0%B8%A3%E0%B8%B4_Stamp_of_Thailand.png" alt="FIBO Logo" class="logo-img">
+            </div>
+            <h1>FIBO</h1>
+            <p class="role">Admin Dashboard</p>
+        
+
+        </aside>
+
+        <main class="form-panel">
+            <div class="form-header">
+                <h2>เข้าสู่ระบบ</h2>
+                <p>ป้อนข้อมูลเพื่อเข้าสู่แอดมิน</p>
+            </div>
+
+            {% if error %}
+                <div class="error">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>{{ error }}</span>
+                </div>
+            {% endif %}
+
+            <form method="POST" novalidate>
+                <div class="field">
+                    <label class="field-label">ชื่อผู้ใช้ / อีเมล</label>
+                    <div class="input-group">
+                        <span class="input-icon"><i class="fa-regular fa-user"></i></span>
+                        <input type="text" name="username" placeholder="ชื่อผู้ใช้หรืออีเมล" required autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="field-label">รหัสผ่าน</label>
+                    <div class="input-group">
+                        <span class="input-icon"><i class="fa-solid fa-lock"></i></span>
+                        <input id="password" type="password" name="password" placeholder="รหัสผ่าน" required autocomplete="current-password">
+                        <button type="button" class="pwd-toggle" aria-label="Toggle password" title="แสดง/ซ่อนรหัสผ่าน"><i class="fa-regular fa-eye"></i></button>
+                    </div>
+                </div>
+
+                <div class="options-row">
+                    <label class="checkbox">
+                        <input type="checkbox" name="remember" id="remember">
+                        <span class="checkmark"></span>
+                        <span class="check-text">จำฉันไว้</span>
+                    </label>
+                    <a class="forgot" href="/admin/forgot-password"><i class="fa-solid fa-question-circle"></i> ลืมรหัสผ่าน?</a>
+                </div>
+
+                <button type="submit" class="btn primary">
+                    <i class="fa-solid fa-sign-in-alt"></i> เข้าสู่ระบบ
+                </button>
+            </form>
+        </main>
+    </div>
+
+    <footer class="small-footer">
+        <p>© <span id="year"></span> TeaEra Cafe — ระบบผู้ดูแล v1.0</p>
+    </footer>
+</div>
+
+<script>
+    // password toggle
+    document.querySelectorAll('.pwd-toggle').forEach(btn=>{
+        btn.addEventListener('click',(e)=>{
+            e.preventDefault();
+            const input = btn.parentElement.querySelector('input');
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    });
+
+    // remember me functionality
+    const rememberCheckbox = document.getElementById('remember');
+    const usernameInput = document.querySelector('input[name="username"]');
+    
+    if (localStorage.getItem('rememberMe') === 'true') {
+        rememberCheckbox.checked = true;
+        usernameInput.value = localStorage.getItem('rememberedUsername') || '';
+    }
+    
+    document.querySelector('form').addEventListener('submit', (e) => {
+        if (rememberCheckbox.checked) {
+            localStorage.setItem('rememberMe', 'true');
+            localStorage.setItem('rememberedUsername', usernameInput.value);
+        } else {
+            localStorage.removeItem('rememberMe');
+            localStorage.removeItem('rememberedUsername');
+        }
+    });
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
