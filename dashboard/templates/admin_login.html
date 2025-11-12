@@ -8,14 +8,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <link rel="stylesheet" href="admin_login.css">
+    <link rel="stylesheet" href="admin_login.css">  
 </head>
 <body>
 <div class="login-wrapper">
     <div class="card">
         <aside class="brand-panel">
             <div class="brand-logo">
-                <img src="https://upload.wikimedia.org/wikipedia/th/d/de/%E0%B8%AA%E0%B8%B4%E0%B8%A3%E0%B8%B4_Stamp_of_Thailand.png" alt="FIBO Logo" class="logo-img">
+                <img src="images/fibo_logo.png" alt="FIBO Logo">
+
             </div>
             <h1>FIBO</h1>
             <p class="role">Admin Dashboard</p>
@@ -29,19 +30,13 @@
                 <p>ป้อนข้อมูลเพื่อเข้าสู่แอดมิน</p>
             </div>
 
-            {% if error %}
-                <div class="error">
-                    <i class="fa-solid fa-circle-exclamation"></i>
-                    <span>{{ error }}</span>
-                </div>
-            {% endif %}
 
             <form method="POST" novalidate>
                 <div class="field">
-                    <label class="field-label">ชื่อผู้ใช้ / อีเมล</label>
+                    <label class="field-label">ชื่อผู้ใช้</label>
                     <div class="input-group">
                         <span class="input-icon"><i class="fa-regular fa-user"></i></span>
-                        <input type="text" name="username" placeholder="ชื่อผู้ใช้หรืออีเมล" required autocomplete="username">
+                        <input type="text" name="username" placeholder="ชื่อผู้ใช้" required autocomplete="username">
                     </div>
                 </div>
 
@@ -55,11 +50,6 @@
                 </div>
 
                 <div class="options-row">
-                    <label class="checkbox">
-                        <input type="checkbox" name="remember" id="remember">
-                        <span class="checkmark"></span>
-                        <span class="check-text">จำฉันไว้</span>
-                    </label>
                     <a class="forgot" href="/admin/forgot-password"><i class="fa-solid fa-question-circle"></i> ลืมรหัสผ่าน?</a>
                 </div>
 
@@ -92,25 +82,6 @@
                 icon.classList.add('fa-eye');
             }
         });
-    });
-
-    // remember me functionality
-    const rememberCheckbox = document.getElementById('remember');
-    const usernameInput = document.querySelector('input[name="username"]');
-    
-    if (localStorage.getItem('rememberMe') === 'true') {
-        rememberCheckbox.checked = true;
-        usernameInput.value = localStorage.getItem('rememberedUsername') || '';
-    }
-    
-    document.querySelector('form').addEventListener('submit', (e) => {
-        if (rememberCheckbox.checked) {
-            localStorage.setItem('rememberMe', 'true');
-            localStorage.setItem('rememberedUsername', usernameInput.value);
-        } else {
-            localStorage.removeItem('rememberMe');
-            localStorage.removeItem('rememberedUsername');
-        }
     });
 
     document.getElementById('year').textContent = new Date().getFullYear();

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Dashboard - FIBO Admin</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+<div class="dashboard-wrapper">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <img src="images/fibo_logo.png" alt="FIBO Logo" class="sidebar-logo">
+            <h2>FIBO</h2>
+        </div>
+
+        <nav class="sidebar-menu">
+            <a href="#" class="menu-item active">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>แดชบอร์ด</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fa-solid fa-utensils"></i>
+                <span>จัดการเมนู</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fa-solid fa-users"></i>
+                <span>จัดการพนักงาน</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fa-solid fa-file-chart-bar"></i>
+                <span>รายงาน</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fa-solid fa-cog"></i>
+                <span>การตั้งค่า</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <h1>ยินดีต้อนรับ, {{ username }}!</h1>
+            </div>
+            <div class="topbar-right">
+                <span class="user-name">{{ username }}</span>
+                <a href="/admin/logout" class="logout-btn">
+                    <i class="fa-solid fa-sign-out-alt"></i> ออกจากระบบ
+                </a>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <div class="welcome-card">
+                <div class="welcome-icon">
+                    <i class="fa-solid fa-wave-hand"></i>
+                </div>
+                <h2>ยินดีต้อนรับสู่ระบบจัดการ FIBO</h2>
+                <p>คุณเข้าสู่ระบบสำเร็จแล้ว</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fa-solid fa-shopping-bag"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>ยอดขายวันนี้</h3>
+                        <p class="stat-value">5,230 บาท</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>จำนวนพนักงาน</h3>
+                        <p class="stat-value">12 คน</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fa-solid fa-utensils"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>รายการเมนู</h3>
+                        <p class="stat-value">48 รายการ</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>อัตราความพึงพอใจ</h3>
+                        <p class="stat-value">4.8 / 5.0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="activity-section">
+                <h3>กิจกรรมล่าสุด</h3>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-icon"><i class="fa-solid fa-circle"></i></div>
+                        <div class="activity-info">
+                            <p class="activity-title">มีคำสั่งซื้อใหม่</p>
+                            <p class="activity-time">เมื่อ 5 นาทีที่แล้ว</p>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon"><i class="fa-solid fa-circle"></i></div>
+                        <div class="activity-info">
+                            <p class="activity-title">อัปเดตเมนูสำเร็จ</p>
+                            <p class="activity-time">เมื่อ 2 ชั่วโมงที่แล้ว</p>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon"><i class="fa-solid fa-circle"></i></div>
+                        <div class="activity-info">
+                            <p class="activity-title">พนักงานใหม่เข้าระบบ</p>
+                            <p class="activity-time">เมื่อ 1 วันที่แล้ว</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    document.getElementById('year') = new Date().getFullYear();
+</script>
+</body>
+</html>
