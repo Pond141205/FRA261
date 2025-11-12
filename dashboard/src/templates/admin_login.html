@@ -8,14 +8,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <link rel="stylesheet" href="admin_login.css">  
+    <!-- <link rel="stylesheet" href="admin_login.css">   -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_login.css') }}">
+
+    
+    
 </head>
 <body>
 <div class="login-wrapper">
     <div class="card">
         <aside class="brand-panel">
             <div class="brand-logo">
-                <img src="images/fibo_logo.png" alt="FIBO Logo">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
 
             </div>
             <h1>FIBO</h1>
@@ -30,7 +34,11 @@
                 <p>ป้อนข้อมูลเพื่อเข้าสู่แอดมิน</p>
             </div>
 
-
+            <!-- Flash Messages -->
+            {% if error %}
+                <div class="alert error">{{ error }}</div>
+            {% endif %}
+  
             <form method="POST" novalidate>
                 <div class="field">
                     <label class="field-label">ชื่อผู้ใช้</label>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Silo Dashboard</title>
+    <!-- <link rel="stylesheet" href="admin_dashboard.css"> -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}">
+    <script>
+        // Branch Data
+        const branches = {
+            branch1: {
+                name: 'สาขากรุงเทพ', location: 'บางนา', totalCapacity: 4000,
+                silos: [
+                    { name: 'Alpha', capacity: 1000, current: 860, temp: 24, humidity: 45, status: 'optimal', material: 'ไซโลที่ 1' },
+                    { name: 'Beta', capacity: 1000, current: 180, temp: 28, humidity: 52, status: 'warning', material: 'ไซโลที่ 2' },
+                    { name: 'Gamma', capacity: 1000, current: 720, temp: 23, humidity: 48, status: 'optimal', material: 'ไซโลที่ 3' },
+                    { name: 'Delta', capacity: 1000, current: 950, temp: 22, humidity: 44, status: 'optimal', material: 'ไซโลที่ 4' }
+                ]
+            },
+            branch2: {
+                name: 'สาขาชลบุรี', location: 'ศรีราชา', totalCapacity: 3000,
+                silos: [
+                    { name: 'Alpha', capacity: 1000, current: 650, temp: 25, humidity: 48, status: 'optimal', material: 'ไซโลที่ 1' },
+                    { name: 'Beta', capacity: 1000, current: 420, temp: 26, humidity: 50, status: 'optimal', material: 'ไซโลที่ 2' },
+                    { name: 'Gamma', capacity: 1000, current: 890, temp: 24, humidity: 46, status: 'optimal', material: 'ไซโลที่ 3' }
+                ]
+            },
+            branch3: {
+                name: 'สาขาระยอง', location: 'มาบตาพุด', totalCapacity: 5000,
+                silos: [
+                    { name: 'Alpha', capacity: 1000, current: 750, temp: 25, humidity: 47, status: 'optimal', material: 'ไซโลที่ 1' },
+                    { name: 'Beta', capacity: 1000, current: 320, temp: 27, humidity: 51, status: 'optimal', material: 'ไซโลที่ 2' },
+                    { name: 'Gamma', capacity: 1000, current: 150, temp: 29, humidity: 54, status: 'warning', material: 'ไซโลที่ 3' },
+                    { name: 'Delta', capacity: 1000, current: 880, temp: 23, humidity: 45, status: 'optimal', material: 'ไซโลที่ 4' },
+                    { name: 'Epsilon', capacity: 1000, current: 960, temp: 24, humidity: 46, status: 'optimal', material: 'ไซโลที่ 5' }
+                ]
+            }
+        };
+
+        let selectedBranch = 'branch1';
+
+        function renderBranches() {
+            const container = document.getElementById('branch-list');
+            container.innerHTML = '';
+            Object.keys(branches).forEach(key => {
+                const branch = branches[key];
+                const totalUsed = branch.silos.reduce((a,b) => a + b.current,0);
+                const percent = Math.round(totalUsed / branch.totalCapacity * 100);
+                const btn = document.createElement('button');
+                btn.className = 'branch-card';
+                if(key === selectedBranch) btn.classList.add('selected');
+                btn.innerHTML = `
+                    <div class="branch-header">
+                        <div>
+                            <h3>${branch.name}</h3>
+                            <p>${branch.location}</p>
+                        </div>
+                        <div class="branch-count">${branch.silos.length} ไซโล</div>
+                    </div>
+                    <div class="branch-progress">
+                        <span>ใช้ไปแล้ว: ${totalUsed} / ${branch.totalCapacity} ตัน (${percent}%)</span>
+                        <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+                    </div>
+                `;
+                btn.onclick = () => { selectedBranch = key; renderBranches(); renderSilos(); };
+                container.appendChild(btn);
+            });
+        }
+
+        function renderSilos() {
+            const siloContainer = document.getElementById('silo-grid');
+            siloContainer.innerHTML = '';
+            const branch = branches[selectedBranch];
+            branch.silos.forEach(silo => {
+                const percent = Math.round(silo.current / silo.capacity * 100);
+                const div = document.createElement('div');
+                div.className = 'silo-card';
+                div.innerHTML = `
+                    <div class="silo-header">
+                        <h4>${silo.name}</h4>
+                        <p>${silo.material}</p>
+                        <div class="status ${silo.status}"></div>
+                    </div>
+                    <div class="silo-tank">
+                        <div class="silo-fill ${silo.status}" style="height:${percent}%"></div>
+                        <div class="silo-overlay"></div>
+                        <div class="silo-text">${percent}%<br>${silo.current} / ${silo.capacity} ตัน</div>
+                    </div>
+                    <div class="silo-metrics">
+                        <div><span>🌡️</span>${silo.temp}°C</div>
+                        <div><span>💧</span>${silo.humidity}%</div>
+                    </div>
+                    ${silo.status==='warning'?'<div class="silo-warning">⚠️ ระดับต่ำ</div>':''}
+                `;
+                siloContainer.appendChild(div);
+            });
+        }
+
+        window.onload = function() {
+            renderBranches();
+            renderSilos();
+        };
+    </script>
+</head>
+<body>
+    <header>
+        <h1>FIBO ADMIN DASHBOARD</h1>
+    </header>
+
+    <main>
+        <section id="branches">
+            <h2>เลือกสาขา</h2>
+            <div id="branch-list" class="branch-list"></div>
+        </section>
+
+        <section id="silos">
+            <h2>ไซโลในสาขา</h2>
+            <div id="silo-grid" class="silo-grid"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2025 Fibo_Silo v1.0</p>
+    </footer>
+</body>
+</html>
