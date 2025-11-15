@@ -42,7 +42,7 @@ class SiloData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     device_id = db.Column(db.String(50))
-    batch_id = db.Column(db.String(100)) #(e.g., S001_01_20251001_22)
+    batch_id = db.Column(db.String(100)) 
     total_chunks = db.Column(db.Integer)
     chunk_id = db.Column(db.Integer)
     point_cloud = db.Column(db.Text)
@@ -58,6 +58,7 @@ class MergedData(db.Model):
     batch_id = db.Column(db.String(100))
     total_points = db.Column(db.Integer)
     merged_points = db.Column(db.Text)
+    mesh_processed = db.Column(db.Boolean, default=False, nullable=False)
 
 # --- Table 3: Volume results ---
 class VolumeData(db.Model):
