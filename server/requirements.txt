@@ -6,3 +6,4 @@ pandas
 requests
 gunicorn
 
+pip install -r requirements.txt
