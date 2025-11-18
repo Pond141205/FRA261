@@ -42,7 +42,7 @@ class SiloData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     device_id = db.Column(db.String(50))
-    batch_id = db.Column(db.String(100)) #(e.g., S001_01_20251001_22)
+    batch_id = db.Column(db.String(100)) 
     total_chunks = db.Column(db.Integer)
     chunk_id = db.Column(db.Integer)
     point_cloud = db.Column(db.Text)
@@ -58,6 +58,7 @@ class MergedData(db.Model):
     batch_id = db.Column(db.String(100))
     total_points = db.Column(db.Integer)
     merged_points = db.Column(db.Text)
+    mesh_processed = db.Column(db.Boolean, default=False, nullable=False)
 
 # --- Table 3: Volume results ---
 class VolumeData(db.Model):
@@ -115,7 +116,7 @@ def try_merge(batch_id, total_chunks, device_id):
     # Estimate total points by counting lines
     total_points = len(all_points_text.splitlines())
     
-    print(f"[{device_id}] Merge complete: ~{total_points} points")
+    print(f"[{device_id}] [Batch_id: {batch_id}] Merge complete: ~{total_points} points")
 
     # Save merged text
     merged_record = MergedData(
@@ -145,7 +146,7 @@ def try_merge(batch_id, total_chunks, device_id):
 @app.route("/upload_chunk", methods=["POST"])
 def upload_chunk():
     device_id = "UNKNOWN_DEVICE"
-    calculated_batch_id = None
+    batch_id = None
     total_chunks = None
     
     try:
@@ -153,6 +154,7 @@ def upload_chunk():
         device_id = request.headers.get("X-Device-ID")
         total_chunks_str = request.headers.get("X-Total-Chunks")
         chunk_id_str = request.headers.get("X-Chunk-ID")
+        batch_id = request.headers.get("X-Batch-ID") 
         
         # print(f"\n--- New Request Headers ---")
         # print(f"X-Device-ID: {device_id}")
@@ -164,7 +166,7 @@ def upload_chunk():
 
         # 2. Get the raw text data
         # We decode the raw bytes (request.data) into a text string
-        point_data = request.data.decode('utf-8')
+        point_data = request.data.decode('utf-8', errors='ignore')
         if not point_data:
              return jsonify({"status":"error","msg":"Empty payload"}), 400
         
@@ -179,17 +181,17 @@ def upload_chunk():
         if not silo:
             return jsonify({"status":"error","msg":"Unknown device_id"}), 400
 
-        # 4. Generate batch ID
+        
         thailand_tz = pytz.timezone('Asia/Bangkok')
         current_time_utc = datetime.now(timezone.utc)
         current_time_thailand = current_time_utc.astimezone(thailand_tz)
-        date_hour_str = current_time_thailand.strftime('%Y%m%d_%H')
-        calculated_batch_id = f"{device_id}_{date_hour_str}"
+        #date_hour_str = current_time_thailand.strftime('%Y%m%d_%H')
+        
         
         # 5. Save the raw text chunk to DB
         record = SiloData(
             device_id = silo.device_id,
-            batch_id = calculated_batch_id,
+            batch_id = batch_id,
             timestamp = current_time_thailand,
             total_chunks = total_chunks,
             chunk_id = chunk_id,
@@ -206,10 +208,10 @@ def upload_chunk():
             db.session.rollback()
             raise e 
         
-        print(f"Received chunk {chunk_id}/{total_chunks} from {device_id} (Batch: {calculated_batch_id})")
+        print(f"Received chunk {chunk_id}/{total_chunks} from {device_id} (Batch: {batch_id})")
 
         # 6. Call try_merge
-        merge_success = try_merge(calculated_batch_id, total_chunks, device_id)
+        merge_success = try_merge(batch_id, total_chunks, device_id)
 
         if merge_success:
             return jsonify({"status":"ok","msg":f"Chunk {chunk_id} saved. Batch MERGED successfully."})
@@ -228,6 +230,7 @@ def upload_chunk():
 #cmd run
 #cd "C:\Users\POND\OneDrive\Documents\AllProject\FRA262 studio\Phase 2\code\server"
 #venv\Scripts\activate
+#ngrok http 5000
 # -------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
