@@ -98,8 +98,8 @@ body {
 }
 
 .brand-logo img {
-    width: 128px;
-    height: 128px;
+    width: 130px;
+    height: 130px;
     object-fit: contain;
     border-radius: 50%;
     background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
