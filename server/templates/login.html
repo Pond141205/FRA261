@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin Login - Fibo_Silo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+<div class="login-wrapper">
+    <div class="card">
+        <aside class="brand-panel">
+            <div class="brand-logo">
+                <img src="{{ url_for('static', filename='images/fibo_logo.png') }}" alt="FIBO Logo">
+            </div>
+            <h1>FIBO</h1>
+            <p class="role">Admin Dashboard</p>
+        </aside>
+        <main class="form-panel">
+            <div class="form-header">
+                <h2>เข้าสู่ระบบ</h2>
+                <p>ป้อนข้อมูลเพื่อเข้าสู่แอดมิน</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% if error %}
+            <div class="alert error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" novalidate>
+                <div class="field">
+                    <label class="field-label">ชื่อผู้ใช้</label>
+                    <div class="input-group">
+                        <span class="input-icon"><i class="fa-regular fa-user"></i></span>
+                        <input type="text" name="username" placeholder="ชื่อผู้ใช้" required autocomplete="username" value="{{ request.form.username }}">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="field-label">รหัสผ่าน</label>
+                    <div class="input-group">
+                        <span class="input-icon"><i class="fa-solid fa-lock"></i></span>
+                        <input id="password" type="password" name="password" placeholder="รหัสผ่าน" required autocomplete="current-password">
+                        <button type="button" class="pwd-toggle" aria-label="Toggle password" title="แสดง/ซ่อนรหัสผ่าน"><i class="fa-regular fa-eye"></i></button>
+                    </div>
+                </div>
+
+                <div class="options-row">
+                    <a class="forgot" href="/admin/forgot-password"><i class="fa-solid fa-question-circle"></i> ลืมรหัสผ่าน?</a>
+                </div>
+
+                <button type="submit" class="btn primary">
+                    <i class="fa-solid fa-sign-in-alt"></i> เข้าสู่ระบบ
+                </button>
+            </form>
+        </main>
+    </div>
+
+    <footer class="small-footer">
+        <p>© <span id="year"></span> Fibo_Silo — ระบบผู้ดูแล v1.0</p>
+    </footer>
+</div>
+
+<script>
+    // password toggle
+    document.querySelectorAll('.pwd-toggle').forEach(btn=>{
+        btn.addEventListener('click',(e)=>{
+            e.preventDefault();
+            const input = btn.parentElement.querySelector('input');
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    });
+
+    // auto update year
+    document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

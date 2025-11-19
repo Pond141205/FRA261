@@ -1,0 +1,2199 @@
+<!-- <!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Silo Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        Reset พื้นฐาน
+        /* * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #F97316;
+            --primary-light: #FFEDD5;
+            --primary-dark: #EA580C;
+            --secondary: #0EA5E9;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --light: #FFF7ED;
+            --dark: #4B5563;
+            --white: #FFFFFF;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Noto Sans Thai', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #FFF7ED 0%, #FFE4CC 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            height: 100vh;
+            overflow: hidden;
+        } */
+
+        /* Header */
+        /* header {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--white);
+            box-shadow: var(--shadow);
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-details {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+        }
+
+        .user-details img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        } */
+
+        /* Breadcrumb */
+        /* .breadcrumb {
+            padding: 0.75rem 2rem;
+            background: var(--white);
+            border-bottom: 1px solid #FDBA74;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--dark);
+        }
+
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .breadcrumb .separator {
+            color: #9CA3AF;
+        }
+
+        .breadcrumb .current {
+            color: var(--dark);
+            font-weight: 500;
+        } */
+
+        /* Main layout */
+        /* main {
+            display: flex;
+            height: calc(100vh - 132px);
+        } */
+
+        /* Sidebar */
+        /* #branches {
+            width: 320px;
+            background: var(--white);
+            border-right: 1px solid #FDBA74;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+            z-index: 5;
+        }
+
+        .branches-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .branches-header h2 {
+            color: var(--primary);
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .add-branch-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-branch-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+
+        .branch-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .branch-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid #FDBA74;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .branch-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .branch-card.selected {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            transform: scale(1.02);
+            box-shadow: 0 8px 16px rgba(249, 115, 22, 0.3);
+        }
+
+        .branch-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .branch-header h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .branch-header p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .branch-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .branch-card.selected .branch-count {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .branch-progress {
+            margin-top: 0.75rem;
+        }
+
+        .branch-progress span {
+            font-size: 0.85rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #FED7AA;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            transition: width 0.5s ease;
+        }
+
+        .branch-card.selected .progress-bar {
+            background: rgba(255, 255, 255, 0.3);
+        } */
+
+        /* Content */
+        /* #silos {
+            flex: 1;
+            background: var(--light);
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header h2 {
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .export-btn {
+            background: var(--success);
+        }
+
+        .export-btn:hover {
+            background: #059669;
+        }
+
+        .branch-info {
+            background: var(--white);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .branch-info i {
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .branch-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .branch-details h3 {
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        .branch-details p {
+            font-size: 0.85rem;
+            color: var(--dark);
+            opacity: 0.8;
+        } */
+
+        /* Silo grid */
+        /* .silo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        } */
+
+        /* Silo card */
+        /* .silo-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .silo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .silo-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+
+        .silo-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .silo-card:hover .silo-actions {
+            opacity: 1;
+        }
+
+        .silo-action-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--dark);
+        }
+
+        .silo-action-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.1);
+        } */
+
+        /* Silo header */
+        /* .silo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .silo-title h4 {
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .silo-title p {
+            font-size: 0.85rem;
+            color: var(--dark);
+            opacity: 0.8;
+        } */
+
+        /* Silo tank */
+        /* .silo-tank {
+            position: relative;
+            height: 180px;
+            background: #FED7AA;
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 1rem;
+            border: 2px solid #FDBA74;
+        }
+
+        .silo-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            border-radius: var(--radius) var(--radius) 0 0;
+            transition: height 1s ease;
+            background: linear-gradient(to top, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+
+        .silo-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 30%);
+        }
+
+        .silo-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            text-align: center;
+            color: var(--dark);
+            z-index: 2;
+        }
+
+        .silo-text .percentage {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .silo-text .amount {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        } */
+
+        /* Silo Detail Modal */
+        /* .silo-detail-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+
+        .silo-detail-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .silo-detail-content {
+            background: white;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 900px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: translateY(-20px);
+            transition: transform 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .silo-detail-modal.active .silo-detail-content {
+            transform: translateY(0);
+        }
+
+        .silo-detail-header {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .silo-detail-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .close-detail {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.2rem;
+        }
+
+        .close-detail:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .silo-detail-body {
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            overflow-y: auto;
+        }
+
+        .silo-detail-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .silo-detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem;
+            border-radius: var(--radius);
+            background: var(--primary-light);
+        }
+
+        .silo-detail-item:nth-child(even) {
+            background: #F3F4F6;
+        }
+
+        .silo-detail-label {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .silo-detail-value {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .silo-detail-chart {
+            height: 300px;
+            position: relative;
+        } */
+
+        /* Combined Chart Section */
+        /* .chart-section {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-top: 1rem;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-header h3 {
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: var(--primary-light);
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid #FDBA74;
+        }
+
+        .view-option {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            color: var(--dark);
+        }
+
+        .view-option.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .chart-select-btn {
+            background: var(--primary-light);
+            border: 1px solid #FDBA74;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-select-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary-dark);
+        }
+
+        .chart-select-btn i {
+            font-size: 0.9rem;
+        } */
+
+        /* Data Table */
+        /* .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .data-table th {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background: #F9FAFB;
+        }
+
+        .silo-color-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        } */
+
+        /* Modal Styles */
+        /* .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(-20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #D1D5DB;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+        }
+
+        .silo-selection-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .silo-selection-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border: 1px solid #E5E7EB;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .silo-selection-item:hover {
+            background: #F9FAFB;
+            border-color: var(--primary);
+        }
+
+        .silo-selection-item.selected {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+
+        .silo-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #D1D5DB;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .silo-selection-item.selected .silo-checkbox {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .silo-selection-item.selected .silo-checkbox::after {
+            content: '✓';
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .silo-selection-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .silo-color-preview {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .silo-selection-info h4 {
+            font-size: 1rem;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .silo-selection-info p {
+            font-size: 0.85rem;
+            color: #6B7280;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: #F3F4F6;
+            color: var(--dark);
+            border: 1px solid #D1D5DB;
+        }
+
+        .btn-secondary:hover {
+            background: #E5E7EB;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #DC2626;
+        } */
+
+        /* Footer */
+        /* footer {
+            text-align: center;
+            padding: 1rem;
+            color: var(--primary);
+            background: var(--primary-light);
+            border-top: 1px solid #FDBA74;
+        } */
+
+        /* Responsive */
+        /* @media (max-width: 1024px) {
+            main {
+                flex-direction: column;
+            }
+            
+            #branches {
+                width: 100%;
+                height: auto;
+                max-height: 30vh;
+            }
+            
+            .branch-list {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+            
+            .branch-card {
+                min-width: 250px;
+            }
+
+            .silo-detail-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .silo-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .branch-info {
+                width: 100%;
+            }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .chart-controls {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .user-info {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .silo-detail-body {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-warehouse"></i>
+                <span>FIBO SILO ADMIN</span>
+            </div>
+            <h1>Dashboard ระบบจัดการไซโล</h1>
+        </div>
+        <div class="user-info">
+            <div class="user-details">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=F97316&color=fff" alt="Admin">
+                <span>ผู้ดูแลระบบ</span>
+            </div>
+            <a href="/admin/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+            </a>
+        </div>
+    </header> */
+
+    <!-- Breadcrumb -->
+    <!-- <div class="breadcrumb" id="breadcrumb">
+        <a href="#" onclick="goToDashboard()">แดชบอร์ด</a>
+        <span class="separator">/</span>
+        <span class="current" id="current-breadcrumb">สาขากรุงเทพ</span>
+    </div>
+
+    <main> -->
+        <!-- Sidebar ทางซ้าย -->
+        <!-- <aside id="branches">
+            <div class="branches-header">
+                <h2><i class="fas fa-map-marker-alt"></i>เลือกสาขา</h2>
+                <button class="add-branch-btn" onclick="openAddBranchModal()">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <div id="branch-list" class="branch-list"></div>
+        </aside> -->
+
+        <!-- เนื้อหาหลักทางขวา -->
+        <!-- <section id="silos">
+            <div class="section-header">
+                <h2><i class="fas fa-warehouse"></i>ไซโลในสาขา</h2>
+                <div class="section-actions">
+                    <button class="action-btn" onclick="openAddSiloModal()">
+                        <i class="fas fa-plus"></i> เพิ่มไซโล
+                    </button>
+                    <button class="action-btn export-btn" onclick="openExportModal()">
+                        <i class="fas fa-file-excel"></i> Export Excel
+                    </button>
+                </div>
+            </div>
+            <div class="branch-info">
+                <i class="fas fa-info-circle"></i>
+                <div class="branch-details">
+                    <h3 id="current-branch-name">สาขากรุงเทพ</h3>
+                    <p id="current-branch-location">บางนา</p>
+                </div>
+            </div>
+            <div id="silo-grid" class="silo-grid"></div> -->
+
+            <!-- Combined Chart Section -->
+            <!-- <div class="chart-section">
+                <div class="chart-header">
+                    <h3><i class="fas fa-chart-line"></i>กราฟรวมสาขา</h3>
+                    <div class="chart-controls">
+                        <div class="view-toggle">
+                            <button class="view-option active" onclick="changeViewType('chart')">กราฟ</button>
+                            <button class="view-option" onclick="changeViewType('table')">ตาราง</button>
+                        </div>
+                        <div id="chart-options">
+                            <div class="view-toggle">
+                                <button class="view-option" onclick="changeChartView('daily')">รายวัน</button>
+                                <button class="view-option active" onclick="changeChartView('hourly')">รายชั่วโมง</button>
+                            </div>
+                        </div>
+                        <div id="table-options" style="display: none;">
+                            <div class="view-toggle">
+                                <button class="view-option" onclick="changeTableView('daily')">รายวัน</button>
+                                <button class="view-option active" onclick="changeTableView('hourly')">รายชั่วโมง</button>
+                            </div>
+                        </div>
+                        <button class="chart-select-btn" onclick="openSiloSelection()">
+                            <i class="fas fa-check-circle"></i> เลือกไซโล
+                        </button>
+                    </div>
+                </div>
+                <div id="chart-view">
+                    <div class="chart-container">
+                        <canvas id="combined-chart"></canvas>
+                    </div>
+                </div>
+                <div id="table-view" style="display: none;">
+                    <table class="data-table" id="data-table">
+                        <thead>
+                            <tr>
+                                <th>เวลา</th> -->
+                                <!-- Table headers will be added dynamically -->
+                            <!-- </tr>
+                        </thead>
+                        <tbody> -->
+                            <!-- Table rows will be added dynamically -->
+                        <!-- </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main> -->
+
+    <!-- Silo Detail Modal -->
+    <!-- <div class="silo-detail-modal" id="siloDetailModal">
+        <div class="silo-detail-content">
+            <div class="silo-detail-header">
+                <h3><i class="fas fa-info-circle"></i>รายละเอียดไซโล</h3>
+                <button class="close-detail" onclick="closeSiloDetail()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="silo-detail-body">
+                <div class="silo-detail-info">
+                    <div class="silo-detail-item">
+                        <span class="silo-detail-label">ชื่อไซโล:</span>
+                        <span class="silo-detail-value" id="detail-name">-</span>
+                    </div>
+                    <div class="silo-detail-item">
+                        <span class="silo-detail-label">วัสดุ:</span>
+                        <span class="silo-detail-value" id="detail-material">-</span>
+                    </div>
+                    <div class="silo-detail-item">
+                        <span class="silo-detail-label">ความจุทั้งหมด:</span>
+                        <span class="silo-detail-value" id="detail-capacity">-</span>
+                    </div>
+                    <div class="silo-detail-item">
+                        <span class="silo-detail-label">ปริมาณปัจจุบัน:</span>
+                        <span class="silo-detail-value" id="detail-current">-</span>
+                    </div>
+                    <div class="silo-detail-item">
+                        <span class="silo-detail-label">อัตราการใช้:</span>
+                        <span class="silo-detail-value" id="detail-percentage">-</span>
+                    </div>
+                    <div class="silo-detail-item">
+                        <span class="silo-detail-label">อัพเดตล่าสุด:</span>
+                        <span class="silo-detail-value" id="detail-lastUpdated">-</span>
+                    </div>
+                </div>
+                <div class="silo-detail-chart">
+                    <canvas id="silo-detail-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Silo Selection Modal -->
+    <!-- <div class="modal-overlay" id="siloSelectionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-filter"></i> เลือกไซโลที่ต้องการแสดง</h3>
+                <button class="close-modal" onclick="closeSiloSelection()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="silo-selection-list" id="siloSelectionList"> -->
+                    <!-- Silo selection items will be added here dynamically -->
+                <!-- </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="selectAllSilos()">เลือกทั้งหมด</button>
+                <button class="btn btn-secondary" onclick="deselectAllSilos()">ยกเลิกทั้งหมด</button>
+                <button class="btn btn-primary" onclick="applySiloSelection()">ตกลง</button>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Export Modal -->
+    <!-- <div class="modal-overlay" id="exportModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-excel"></i> Export Excel</h3>
+                <button class="close-modal" onclick="closeExportModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="exportBranch">เลือกสาขา</label>
+                    <select id="exportBranch" class="form-control"> -->
+                        <!-- Options will be added dynamically -->
+                    <!-- </select>
+                </div>
+                <div class="form-group">
+                    <label for="exportType">เลือกประเภทข้อมูล</label>
+                    <select id="exportType" class="form-control">
+                        <option value="daily">รายวัน</option>
+                        <option value="hourly">รายชั่วโมง</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>เลือกไซโลที่ต้องการ Export</label>
+                    <div class="silo-selection-list" id="exportSiloList"> -->
+                        <!-- Silo selection items will be added here dynamically -->
+                    <!-- </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeExportModal()">ยกเลิก</button>
+                <button class="btn btn-primary" onclick="exportToExcel()">Export</button>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Add Silo Modal -->
+    <!-- <div class="modal-overlay" id="addSiloModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus"></i> เพิ่มไซโลใหม่</h3>
+                <button class="close-modal" onclick="closeAddSiloModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addSiloForm">
+                    <div class="form-group">
+                        <label for="siloName">ชื่อไซโล</label>
+                        <input type="text" id="siloName" class="form-control" placeholder="เช่น Alpha, Beta, Gamma" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="siloMaterial">วัสดุ</label>
+                        <input type="text" id="siloMaterial" class="form-control" placeholder="เช่น ไซโลที่ 1, ไซโลที่ 2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="siloCapacity">ความจุทั้งหมด (ตัน)</label>
+                        <input type="number" id="siloCapacity" class="form-control" placeholder="เช่น 1000" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="siloCurrent">ปริมาณปัจจุบัน (ตัน)</label>
+                        <input type="number" id="siloCurrent" class="form-control" placeholder="เช่น 500" min="0" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddSiloModal()">ยกเลิก</button>
+                <button class="btn btn-primary" onclick="addNewSilo()">เพิ่มไซโล</button>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Add Branch Modal -->
+    <!-- <div class="modal-overlay" id="addBranchModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus"></i> เพิ่มสาขาใหม่</h3>
+                <button class="close-modal" onclick="closeAddBranchModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addBranchForm">
+                    <div class="form-group">
+                        <label for="branchName">ชื่อสาขา</label>
+                        <input type="text" id="branchName" class="form-control" placeholder="เช่น สาขากรุงเทพ, สาขาชลบุรี" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="branchLocation">ที่ตั้ง</label>
+                        <input type="text" id="branchLocation" class="form-control" placeholder="เช่น บางนา, ศรีราชา" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="branchCapacity">ความจุทั้งหมด (ตัน)</label>
+                        <input type="number" id="branchCapacity" class="form-control" placeholder="เช่น 4000" min="1" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddBranchModal()">ยกเลิก</button>
+                <button class="btn btn-primary" onclick="addNewBranch()">เพิ่มสาขา</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2025 Fibo_Silo Management System v1.0</p>
+    </footer>
+
+    <script>
+        // Branch Data
+        let branches = {
+            branch1: {
+                name: 'สาขากรุงเทพ',
+                location: 'บางนา',
+                totalCapacity: 4000,
+                silos: [
+                    { 
+                        name: 'Alpha', 
+                        capacity: 1000, 
+                        current: 860, 
+                        material: 'ไซโลที่ 1',
+                        lastUpdated: '2025-01-15 14:30'
+                    },
+                    { 
+                        name: 'Beta', 
+                        capacity: 1000, 
+                        current: 180, 
+                        material: 'ไซโลที่ 2',
+                        lastUpdated: '2025-01-15 14:25'
+                    },
+                    { 
+                        name: 'Gamma', 
+                        capacity: 1000, 
+                        current: 720, 
+                        material: 'ไซโลที่ 3',
+                        lastUpdated: '2025-01-15 14:28'
+                    },
+                    { 
+                        name: 'Delta', 
+                        capacity: 1000, 
+                        current: 950, 
+                        material: 'ไซโลที่ 4',
+                        lastUpdated: '2025-01-15 14:32'
+                    }
+                ]
+            },
+            branch2: {
+                name: 'สาขาชลบุรี',
+                location: 'ศรีราชา',
+                totalCapacity: 3000,
+                silos: [
+                    { 
+                        name: 'Alpha', 
+                        capacity: 1000, 
+                        current: 650, 
+                        material: 'ไซโลที่ 1',
+                        lastUpdated: '2025-01-15 13:45'
+                    },
+                    { 
+                        name: 'Beta', 
+                        capacity: 1000, 
+                        current: 420, 
+                        material: 'ไซโลที่ 2',
+                        lastUpdated: '2025-01-15 13:50'
+                    },
+                    { 
+                        name: 'Gamma', 
+                        capacity: 1000, 
+                        current: 890, 
+                        material: 'ไซโลที่ 3',
+                        lastUpdated: '2025-01-15 13:55'
+                    }
+                ]
+            },
+            branch3: {
+                name: 'สาขาระยอง',
+                location: 'มาบตาพุด',
+                totalCapacity: 5000,
+                silos: [
+                    { 
+                        name: 'Alpha', 
+                        capacity: 1000, 
+                        current: 750, 
+                        material: 'ไซโลที่ 1',
+                        lastUpdated: '2025-01-15 12:30'
+                    },
+                    { 
+                        name: 'Beta', 
+                        capacity: 1000, 
+                        current: 320, 
+                        material: 'ไซโลที่ 2',
+                        lastUpdated: '2025-01-15 12:35'
+                    },
+                    { 
+                        name: 'Gamma', 
+                        capacity: 1000, 
+                        current: 150, 
+                        material: 'ไซโลที่ 3',
+                        lastUpdated: '2025-01-15 12:40'
+                    },
+                    { 
+                        name: 'Delta', 
+                        capacity: 1000, 
+                        current: 880, 
+                        material: 'ไซโลที่ 4',
+                        lastUpdated: '2025-01-15 12:45'
+                    },
+                    { 
+                        name: 'Epsilon', 
+                        capacity: 1000, 
+                        current: 960, 
+                        material: 'ไซโลที่ 5',
+                        lastUpdated: '2025-01-15 12:50'
+                    }
+                ]
+            }
+        };
+
+        // Colors for different silos - consistent across chart and table
+        const siloColors = [
+            '#F97316', '#0EA5E9', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444',
+            '#84CC16', '#06B6D4', '#EC4899', '#78716C'
+        ];
+
+        // Store silo color assignments
+        const siloColorMap = new Map();
+
+        let selectedBranch = 'branch1';
+        let combinedChart = null;
+        let siloDetailChart = null;
+        let selectedSilos = new Set();
+        let currentViewType = 'chart'; // 'chart' or 'table' - ตั้งค่าเริ่มต้นเป็นกราฟ
+        let currentChartView = 'hourly'; // 'daily' or 'hourly' - ตั้งค่าเริ่มต้นเป็นรายชั่วโมง
+        let currentTableView = 'hourly'; // 'daily' or 'hourly' - ตั้งค่าเริ่มต้นเป็นรายชั่วโมง
+
+        function getSiloColor(siloName) {
+            if (!siloColorMap.has(siloName)) {
+                // Assign a color based on the silo name
+                const branch = branches[selectedBranch];
+                const siloIndex = branch.silos.findIndex(silo => silo.name === siloName);
+                const colorIndex = siloIndex % siloColors.length;
+                siloColorMap.set(siloName, siloColors[colorIndex]);
+            }
+            return siloColorMap.get(siloName);
+        }
+
+        function updateBreadcrumb() {
+            const branch = branches[selectedBranch];
+            document.getElementById('current-breadcrumb').textContent = branch.name;
+        }
+
+        function goToDashboard() {
+            // In a real application, this would navigate to the dashboard
+            // For now, we'll just update the breadcrumb
+            document.getElementById('current-breadcrumb').textContent = 'แดชบอร์ด';
+        }
+
+        function renderBranches() {
+            const container = document.getElementById('branch-list');
+            container.innerHTML = '';
+            
+            Object.keys(branches).forEach(key => {
+                const branch = branches[key];
+                const totalUsed = branch.silos.reduce((a, b) => a + b.current, 0);
+                const percent = Math.round(totalUsed / branch.totalCapacity * 100);
+                
+                const btn = document.createElement('div');
+                btn.className = 'branch-card';
+                if (key === selectedBranch) btn.classList.add('selected');
+                
+                btn.innerHTML = `
+                    <div class="branch-header">
+                        <div>
+                            <h3>${branch.name}</h3>
+                            <p>${branch.location}</p>
+                        </div>
+                        <div class="branch-count">${branch.silos.length} ไซโล</div>
+                    </div>
+                    <div class="branch-progress">
+                        <span>ใช้ไปแล้ว: ${totalUsed} / ${branch.totalCapacity} ตัน (${percent}%)</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+                
+                btn.onclick = () => {
+                    selectedBranch = key;
+                    // When switching branches, select all silos by default
+                    selectedSilos.clear();
+                    branches[key].silos.forEach(silo => selectedSilos.add(silo.name));
+                    
+                    renderBranches();
+                    renderSilos();
+                    updateBranchInfo();
+                    updateBreadcrumb();
+                    updateView();
+                };
+                
+                container.appendChild(btn);
+            });
+        }
+
+        function renderSilos() {
+            const siloContainer = document.getElementById('silo-grid');
+            siloContainer.innerHTML = '';
+            
+            const branch = branches[selectedBranch];
+            
+            branch.silos.forEach((silo, index) => {
+                const percent = Math.round(silo.current / silo.capacity * 100);
+                const div = document.createElement('div');
+                div.className = 'silo-card';
+                
+                // Get consistent color for this silo
+                const siloColor = getSiloColor(silo.name);
+                
+                div.innerHTML = `
+                    <div class="silo-actions">
+                        <button class="silo-action-btn" onclick="deleteSilo('${silo.name}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="silo-header">
+                        <div class="silo-title">
+                            <h4>${silo.name}</h4>
+                            <p>${silo.material}</p>
+                        </div>
+                    </div>
+                    <div class="silo-tank">
+                        <div class="silo-fill" style="height:${percent}%"></div>
+                        <div class="silo-overlay"></div>
+                        <div class="silo-text">
+                            <div class="percentage">${percent}%</div>
+                            <div class="amount">${silo.current} / ${silo.capacity} ตัน</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add click event to show silo details
+                div.onclick = () => showSiloDetail(silo, siloColor);
+                
+                siloContainer.appendChild(div);
+            });
+        }
+
+        function updateBranchInfo() {
+            const branch = branches[selectedBranch];
+            document.getElementById('current-branch-name').textContent = branch.name;
+            document.getElementById('current-branch-location').textContent = branch.location;
+        }
+
+        function showSiloDetail(silo, color) {
+            const modal = document.getElementById('siloDetailModal');
+            modal.classList.add('active');
+            
+            // Update detail information
+            document.getElementById('detail-name').textContent = silo.name;
+            document.getElementById('detail-material').textContent = silo.material;
+            document.getElementById('detail-capacity').textContent = silo.capacity + ' ตัน';
+            document.getElementById('detail-current').textContent = silo.current + ' ตัน';
+            document.getElementById('detail-percentage').textContent = Math.round(silo.current / silo.capacity * 100) + '%';
+            document.getElementById('detail-lastUpdated').textContent = silo.lastUpdated;
+            
+            // Render detail chart
+            renderSiloDetailChart(silo, color);
+        }
+
+        function closeSiloDetail() {
+            const modal = document.getElementById('siloDetailModal');
+            modal.classList.remove('active');
+        }
+
+        function renderSiloDetailChart(silo, color) {
+            const ctx = document.getElementById('silo-detail-chart').getContext('2d');
+            
+            // Destroy existing chart
+            if (siloDetailChart) {
+                siloDetailChart.destroy();
+            }
+            
+            // Generate data
+            const labels = ['6 วันก่อน', '5 วันก่อน', '4 วันก่อน', '3 วันก่อน', '2 วันก่อน', 'เมื่อวาน', 'วันนี้'];
+            const data = generateDailyData(silo.current);
+            
+            siloDetailChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: silo.name,
+                        data: data,
+                        borderColor: color,
+                        backgroundColor: color + '20',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'ปริมาณวัสดุ (ตัน)'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function changeViewType(viewType) {
+            currentViewType = viewType;
+            
+            // Update active button
+            document.querySelectorAll('.view-toggle .view-option').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show/hide appropriate views
+            const chartView = document.getElementById('chart-view');
+            const tableView = document.getElementById('table-view');
+            const chartOptions = document.getElementById('chart-options');
+            const tableOptions = document.getElementById('table-options');
+            
+            if (viewType === 'chart') {
+                chartView.style.display = 'block';
+                tableView.style.display = 'none';
+                chartOptions.style.display = 'flex';
+                tableOptions.style.display = 'none';
+                renderCombinedChart();
+            } else {
+                chartView.style.display = 'none';
+                tableView.style.display = 'block';
+                chartOptions.style.display = 'none';
+                tableOptions.style.display = 'flex';
+                renderDataTable();
+            }
+        }
+
+        function changeChartView(view) {
+            currentChartView = view;
+            
+            // Update active button
+            document.querySelectorAll('#chart-options .view-option').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderCombinedChart();
+        }
+
+        function changeTableView(view) {
+            currentTableView = view;
+            
+            // Update active button
+            document.querySelectorAll('#table-options .view-option').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderDataTable();
+        }
+
+        function openSiloSelection() {
+            const modal = document.getElementById('siloSelectionModal');
+            modal.classList.add('active');
+            renderSiloSelectionList();
+        }
+
+        function closeSiloSelection() {
+            const modal = document.getElementById('siloSelectionModal');
+            modal.classList.remove('active');
+        }
+
+        function renderSiloSelectionList() {
+            const container = document.getElementById('siloSelectionList');
+            container.innerHTML = '';
+            
+            const branch = branches[selectedBranch];
+            
+            branch.silos.forEach((silo) => {
+                const percent = Math.round(silo.current / silo.capacity * 100);
+                const isSelected = selectedSilos.has(silo.name);
+                const siloColor = getSiloColor(silo.name);
+                
+                const item = document.createElement('div');
+                item.className = `silo-selection-item ${isSelected ? 'selected' : ''}`;
+                item.onclick = () => toggleSiloSelection(silo.name, item);
+                
+                item.innerHTML = `
+                    <div class="silo-checkbox"></div>
+                    <div class="silo-selection-info">
+                        <div class="silo-color-preview" style="background-color: ${siloColor}"></div>
+                        <div>
+                            <h4>${silo.name} - ${silo.material}</h4>
+                            <p>${silo.current} / ${silo.capacity} ตัน (${percent}%)</p>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+
+        function toggleSiloSelection(siloName, element) {
+            if (selectedSilos.has(siloName)) {
+                selectedSilos.delete(siloName);
+                element.classList.remove('selected');
+            } else {
+                selectedSilos.add(siloName);
+                element.classList.add('selected');
+            }
+        }
+
+        function selectAllSilos() {
+            const branch = branches[selectedBranch];
+            selectedSilos.clear();
+            branch.silos.forEach(silo => selectedSilos.add(silo.name));
+            renderSiloSelectionList();
+        }
+
+        function deselectAllSilos() {
+            selectedSilos.clear();
+            renderSiloSelectionList();
+        }
+
+        function applySiloSelection() {
+            closeSiloSelection();
+            updateView();
+        }
+
+        function openExportModal() {
+            const modal = document.getElementById('exportModal');
+            modal.classList.add('active');
+            renderExportOptions();
+        }
+
+        function closeExportModal() {
+            const modal = document.getElementById('exportModal');
+            modal.classList.remove('active');
+        }
+
+        function renderExportOptions() {
+            // Render branch options
+            const branchSelect = document.getElementById('exportBranch');
+            branchSelect.innerHTML = '';
+            
+            Object.keys(branches).forEach(key => {
+                const branch = branches[key];
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = branch.name;
+                if (key === selectedBranch) option.selected = true;
+                branchSelect.appendChild(option);
+            });
+            
+            // Render silo selection list
+            const container = document.getElementById('exportSiloList');
+            container.innerHTML = '';
+            
+            const branch = branches[selectedBranch];
+            
+            branch.silos.forEach((silo) => {
+                const percent = Math.round(silo.current / silo.capacity * 100);
+                const siloColor = getSiloColor(silo.name);
+                
+                const item = document.createElement('div');
+                item.className = 'silo-selection-item selected';
+                item.onclick = () => toggleExportSiloSelection(silo.name, item);
+                
+                item.innerHTML = `
+                    <div class="silo-checkbox"></div>
+                    <div class="silo-selection-info">
+                        <div class="silo-color-preview" style="background-color: ${siloColor}"></div>
+                        <div>
+                            <h4>${silo.name} - ${silo.material}</h4>
+                            <p>${silo.current} / ${silo.capacity} ตัน (${percent}%)</p>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+
+        function toggleExportSiloSelection(siloName, element) {
+            if (element.classList.contains('selected')) {
+                element.classList.remove('selected');
+            } else {
+                element.classList.add('selected');
+            }
+        }
+
+        function openAddSiloModal() {
+            const modal = document.getElementById('addSiloModal');
+            modal.classList.add('active');
+            document.getElementById('addSiloForm').reset();
+        }
+
+        function closeAddSiloModal() {
+            const modal = document.getElementById('addSiloModal');
+            modal.classList.remove('active');
+        }
+
+        function openAddBranchModal() {
+            const modal = document.getElementById('addBranchModal');
+            modal.classList.add('active');
+            document.getElementById('addBranchForm').reset();
+        }
+
+        function closeAddBranchModal() {
+            const modal = document.getElementById('addBranchModal');
+            modal.classList.remove('active');
+        }
+
+        function addNewSilo() {
+            const name = document.getElementById('siloName').value;
+            const material = document.getElementById('siloMaterial').value;
+            const capacity = parseInt(document.getElementById('siloCapacity').value);
+            const current = parseInt(document.getElementById('siloCurrent').value);
+            
+            if (!name || !material || !capacity || !current) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
+            
+            if (current > capacity) {
+                alert('ปริมาณปัจจุบันต้องไม่เกินความจุทั้งหมด');
+                return;
+            }
+            
+            const newSilo = {
+                name: name,
+                material: material,
+                capacity: capacity,
+                current: current,
+                lastUpdated: new Date().toLocaleString('th-TH')
+            };
+            
+            branches[selectedBranch].silos.push(newSilo);
+            selectedSilos.add(name);
+            
+            closeAddSiloModal();
+            renderSilos();
+            updateView();
+            
+            alert(`เพิ่มไซโล ${name} สำเร็จแล้ว`);
+        }
+
+        function addNewBranch() {
+            const name = document.getElementById('branchName').value;
+            const location = document.getElementById('branchLocation').value;
+            const capacity = parseInt(document.getElementById('branchCapacity').value);
+            
+            if (!name || !location || !capacity) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
+            
+            const branchId = 'branch' + (Object.keys(branches).length + 1);
+            branches[branchId] = {
+                name: name,
+                location: location,
+                totalCapacity: capacity,
+                silos: []
+            };
+            
+            closeAddBranchModal();
+            renderBranches();
+            
+            alert(`เพิ่มสาขา ${name} สำเร็จแล้ว`);
+        }
+
+        function deleteSilo(siloName) {
+            if (confirm(`คุณแน่ใจว่าต้องการลบไซโล ${siloName} ใช่หรือไม่?`)) {
+                const branch = branches[selectedBranch];
+                branch.silos = branch.silos.filter(s => s.name !== siloName);
+                selectedSilos.delete(siloName);
+                siloColorMap.delete(siloName);
+                
+                renderSilos();
+                updateView();
+                alert(`ลบไซโล ${siloName} สำเร็จแล้ว`);
+            }
+        }
+
+        function exportToExcel() {
+            try {
+                const branchId = document.getElementById('exportBranch').value;
+                const exportType = document.getElementById('exportType').value;
+                const branch = branches[branchId];
+                
+                // Get selected silos for export
+                const exportSiloList = document.getElementById('exportSiloList');
+                const selectedSiloItems = exportSiloList.querySelectorAll('.silo-selection-item.selected');
+                const selectedSilosForExport = [];
+                
+                selectedSiloItems.forEach(item => {
+                    const siloName = item.querySelector('h4').textContent.split(' - ')[0];
+                    selectedSilosForExport.push(siloName);
+                });
+                
+                if (selectedSilosForExport.length === 0) {
+                    alert('กรุณาเลือกไซโลที่ต้องการ Export');
+                    return;
+                }
+                
+                // Prepare data for export
+                const data = [];
+                
+                // Add header row
+                const header = ['เวลา'];
+                selectedSilosForExport.forEach(siloName => {
+                    header.push(siloName + ' (ตัน)');
+                });
+                data.push(header);
+                
+                // Generate data rows
+                const rowCount = 7; // 7 days or 7 hours
+                for (let i = 0; i < rowCount; i++) {
+                    const row = [];
+                    
+                    // Add time cell
+                    if (exportType === 'daily') {
+                        const days = ['6 วันก่อน', '5 วันก่อน', '4 วันก่อน', '3 วันก่อน', '2 วันก่อน', 'เมื่อวาน', 'วันนี้'];
+                        row.push(days[i]);
+                    } else {
+                        const hours = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00'];
+                        row.push(hours[i]);
+                    }
+                    
+                    // Add data cells for each selected silo
+                    selectedSilosForExport.forEach(siloName => {
+                        const silo = branch.silos.find(s => s.name === siloName);
+                        if (silo) {
+                            const siloData = exportType === 'daily' ? 
+                                generateDailyData(silo.current) : 
+                                generateHourlyData(silo.current);
+                            row.push(Math.round(siloData[i]));
+                        }
+                    });
+                    
+                    data.push(row);
+                }
+                
+                // Create worksheet
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                
+                // Create workbook
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'ข้อมูลไซโล');
+                
+                // Generate Excel file and download
+                const branchName = branch.name.replace('สาขา', '').trim();
+                const fileName = `ข้อมูลไซโล_${branchName}_${exportType === 'daily' ? 'รายวัน' : 'รายชั่วโมง'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+                
+                closeExportModal();
+                alert(`ส่งออกข้อมูลเป็น Excel สำเร็จ: ${fileName}`);
+            } catch (error) {
+                console.error('Error exporting to Excel:', error);
+                alert('เกิดข้อผิดพลาดในการส่งออกข้อมูลเป็น Excel');
+            }
+        }
+
+        function generateDailyData(currentValue) {
+            const data = [];
+            for (let i = 0; i < 7; i++) {
+                const variation = (7 - i) * 10 + Math.random() * 30;
+                data.push(Math.max(0, currentValue - variation));
+            }
+            return data;
+        }
+
+        function generateHourlyData(currentValue) {
+            const data = [];
+            for (let i = 0; i < 7; i++) {
+                const variation = (7 - i) * 2 + Math.random() * 10;
+                data.push(Math.max(0, currentValue - variation));
+            }
+            return data;
+        }
+
+        function updateView() {
+            if (currentViewType === 'chart') {
+                renderCombinedChart();
+            } else {
+                renderDataTable();
+            }
+        }
+
+        function renderCombinedChart() {
+            const ctx = document.getElementById('combined-chart').getContext('2d');
+            const branch = branches[selectedBranch];
+            
+            // Destroy existing chart
+            if (combinedChart) {
+                combinedChart.destroy();
+            }
+            
+            // If no silos are selected, show all
+            if (selectedSilos.size === 0) {
+                branch.silos.forEach(silo => selectedSilos.add(silo.name));
+            }
+            
+            // Generate data based on current view
+            let labels;
+            if (currentChartView === 'daily') {
+                labels = ['6 วันก่อน', '5 วันก่อน', '4 วันก่อน', '3 วันก่อน', '2 วันก่อน', 'เมื่อวาน', 'วันนี้'];
+            } else {
+                labels = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00'];
+            }
+            
+            // Prepare datasets based on selected silos
+            const datasets = [];
+            
+            // Add datasets for selected silos
+            branch.silos.forEach((silo) => {
+                if (selectedSilos.has(silo.name)) {
+                    const data = currentChartView === 'daily' ? 
+                        generateDailyData(silo.current) : 
+                        generateHourlyData(silo.current);
+                    
+                    const siloColor = getSiloColor(silo.name);
+                    
+                    datasets.push({
+                        label: silo.name,
+                        data: data,
+                        borderColor: siloColor,
+                        backgroundColor: siloColor + '20', // Add transparency
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    });
+                }
+            });
+            
+            combinedChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'ปริมาณวัสดุ (ตัน)'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDataTable() {
+            const table = document.getElementById('data-table');
+            const branch = branches[selectedBranch];
+            
+            // Clear existing table
+            table.innerHTML = '';
+            
+            // Create table header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            
+            // Add time column
+            const timeHeader = document.createElement('th');
+            timeHeader.textContent = currentTableView === 'daily' ? 'วันที่' : 'เวลา';
+            headerRow.appendChild(timeHeader);
+            
+            // Add silo columns for selected silos
+            branch.silos.forEach((silo) => {
+                if (selectedSilos.has(silo.name)) {
+                    const siloColor = getSiloColor(silo.name);
+                    
+                    const th = document.createElement('th');
+                    th.innerHTML = `<span class="silo-color-indicator" style="background-color: ${siloColor}"></span> ${silo.name}`;
+                    headerRow.appendChild(th);
+                }
+            });
+            
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            // Create table body
+            const tbody = document.createElement('tbody');
+            
+            // Generate data rows
+            const rowCount = 7; // 7 days or 7 hours
+            for (let i = 0; i < rowCount; i++) {
+                const row = document.createElement('tr');
+                
+                // Add time cell
+                const timeCell = document.createElement('td');
+                if (currentTableView === 'daily') {
+                    const days = ['6 วันก่อน', '5 วันก่อน', '4 วันก่อน', '3 วันก่อน', '2 วันก่อน', 'เมื่อวาน', 'วันนี้'];
+                    timeCell.textContent = days[i];
+                } else {
+                    const hours = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00'];
+                    timeCell.textContent = hours[i];
+                }
+                row.appendChild(timeCell);
+                
+                // Add data cells for each selected silo
+                branch.silos.forEach((silo) => {
+                    if (selectedSilos.has(silo.name)) {
+                        const dataCell = document.createElement('td');
+                        const data = currentTableView === 'daily' ? 
+                            generateDailyData(silo.current) : 
+                            generateHourlyData(silo.current);
+                        dataCell.textContent = Math.round(data[i]) + ' ตัน';
+                        row.appendChild(dataCell);
+                    }
+                });
+                
+                tbody.appendChild(row);
+            }
+            
+            table.appendChild(tbody);
+        }
+
+        window.onload = function() {
+            // Select all silos by default
+            const branch = branches[selectedBranch];
+            branch.silos.forEach(silo => selectedSilos.add(silo.name));
+            
+            renderBranches();
+            renderSilos();
+            updateBranchInfo();
+            updateBreadcrumb();
+            renderCombinedChart(); // Start with chart view
+        };
+    </script>
+</body>
+</html> --> 
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    <h1>Welcome Admin: {{ username }}</h1>
+    <p>This is the Admin dashboard.</p>
+    <a href="{{ url_for('logout') }}">Logout</a>
+</body>
+</html>
