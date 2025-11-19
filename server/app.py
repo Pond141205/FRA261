@@ -143,11 +143,29 @@ def try_merge(batch_id, total_chunks, device_id):
 # -------------------------------
 # API Endpoints
 # -------------------------------
+
+@app.route("/api/merged_data")
+def api_merged_data():
+    rows = MergedData.query.order_by(MergedData.timestamp.desc()).all()
+    result = []
+    for r in rows:
+        result.append({
+            "id": r.id,
+            "timestamp": r.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            "device_id": r.device_id,
+            "batch_id": r.batch_id,
+            "total_points": r.total_points,
+            "mesh_processed": bool(r.mesh_processed)
+        })
+    return jsonify(result)
+
 @app.route("/upload_chunk", methods=["POST"])
 def upload_chunk():
     device_id = "UNKNOWN_DEVICE"
     batch_id = None
     total_chunks = None
+
+
     
     try:
         # 1. Get headers (these are all strings)
