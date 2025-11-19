@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -8,8 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* Reset พื้นฐาน */
-        * {
+        Reset พื้นฐาน
+        /* * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -37,10 +37,10 @@
             line-height: 1.6;
             height: 100vh;
             overflow: hidden;
-        }
+        } */
 
         /* Header */
-        header {
+        /* header {
             background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
             padding: 1rem 2rem;
             display: flex;
@@ -108,10 +108,10 @@
         .logout-btn:hover {
             background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
-        }
+        } */
 
         /* Breadcrumb */
-        .breadcrumb {
+        /* .breadcrumb {
             padding: 0.75rem 2rem;
             background: var(--white);
             border-bottom: 1px solid #FDBA74;
@@ -140,16 +140,16 @@
         .breadcrumb .current {
             color: var(--dark);
             font-weight: 500;
-        }
+        } */
 
         /* Main layout */
-        main {
+        /* main {
             display: flex;
             height: calc(100vh - 132px);
-        }
+        } */
 
         /* Sidebar */
-        #branches {
+        /* #branches {
             width: 320px;
             background: var(--white);
             border-right: 1px solid #FDBA74;
@@ -280,10 +280,10 @@
 
         .branch-card.selected .progress-bar {
             background: rgba(255, 255, 255, 0.3);
-        }
+        } */
 
         /* Content */
-        #silos {
+        /* #silos {
             flex: 1;
             background: var(--light);
             padding: 1.5rem;
@@ -368,18 +368,18 @@
             font-size: 0.85rem;
             color: var(--dark);
             opacity: 0.8;
-        }
+        } */
 
         /* Silo grid */
-        .silo-grid {
+        /* .silo-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
-        }
+        } */
 
         /* Silo card */
-        .silo-card {
+        /* .silo-card {
             background: var(--white);
             border-radius: var(--radius);
             padding: 1.5rem;
@@ -437,10 +437,10 @@
             background: var(--primary);
             color: white;
             transform: scale(1.1);
-        }
+        } */
 
         /* Silo header */
-        .silo-header {
+        /* .silo-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -457,10 +457,10 @@
             font-size: 0.85rem;
             color: var(--dark);
             opacity: 0.8;
-        }
+        } */
 
         /* Silo tank */
-        .silo-tank {
+        /* .silo-tank {
             position: relative;
             height: 180px;
             background: #FED7AA;
@@ -507,10 +507,10 @@
         .silo-text .amount {
             font-size: 0.9rem;
             opacity: 0.9;
-        }
+        } */
 
         /* Silo Detail Modal */
-        .silo-detail-modal {
+        /* .silo-detail-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -625,10 +625,10 @@
         .silo-detail-chart {
             height: 300px;
             position: relative;
-        }
+        } */
 
         /* Combined Chart Section */
-        .chart-section {
+        /* .chart-section {
             background: var(--white);
             border-radius: var(--radius);
             padding: 1.5rem;
@@ -701,10 +701,10 @@
 
         .chart-select-btn i {
             font-size: 0.9rem;
-        }
+        } */
 
         /* Data Table */
-        .data-table {
+        /* .data-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
@@ -738,10 +738,10 @@
         .chart-container {
             height: 300px;
             position: relative;
-        }
+        } */
 
         /* Modal Styles */
-        .modal-overlay {
+        /* .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -956,19 +956,19 @@
 
         .btn-danger:hover {
             background: #DC2626;
-        }
+        } */
 
         /* Footer */
-        footer {
+        /* footer {
             text-align: center;
             padding: 1rem;
             color: var(--primary);
             background: var(--primary-light);
             border-top: 1px solid #FDBA74;
-        }
+        } */
 
         /* Responsive */
-        @media (max-width: 1024px) {
+        /* @media (max-width: 1024px) {
             main {
                 flex-direction: column;
             }
@@ -1048,18 +1048,18 @@
                 <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
             </a>
         </div>
-    </header>
+    </header> */
 
     <!-- Breadcrumb -->
-    <div class="breadcrumb" id="breadcrumb">
+    <!-- <div class="breadcrumb" id="breadcrumb">
         <a href="#" onclick="goToDashboard()">แดชบอร์ด</a>
         <span class="separator">/</span>
         <span class="current" id="current-breadcrumb">สาขากรุงเทพ</span>
     </div>
 
-    <main>
+    <main> -->
         <!-- Sidebar ทางซ้าย -->
-        <aside id="branches">
+        <!-- <aside id="branches">
             <div class="branches-header">
                 <h2><i class="fas fa-map-marker-alt"></i>เลือกสาขา</h2>
                 <button class="add-branch-btn" onclick="openAddBranchModal()">
@@ -1067,10 +1067,10 @@
                 </button>
             </div>
             <div id="branch-list" class="branch-list"></div>
-        </aside>
+        </aside> -->
 
         <!-- เนื้อหาหลักทางขวา -->
-        <section id="silos">
+        <!-- <section id="silos">
             <div class="section-header">
                 <h2><i class="fas fa-warehouse"></i>ไซโลในสาขา</h2>
                 <div class="section-actions">
@@ -1089,10 +1089,10 @@
                     <p id="current-branch-location">บางนา</p>
                 </div>
             </div>
-            <div id="silo-grid" class="silo-grid"></div>
+            <div id="silo-grid" class="silo-grid"></div> -->
 
             <!-- Combined Chart Section -->
-            <div class="chart-section">
+            <!-- <div class="chart-section">
                 <div class="chart-header">
                     <h3><i class="fas fa-chart-line"></i>กราฟรวมสาขา</h3>
                     <div class="chart-controls">
@@ -1126,21 +1126,21 @@
                     <table class="data-table" id="data-table">
                         <thead>
                             <tr>
-                                <th>เวลา</th>
+                                <th>เวลา</th> -->
                                 <!-- Table headers will be added dynamically -->
-                            </tr>
+                            <!-- </tr>
                         </thead>
-                        <tbody>
+                        <tbody> -->
                             <!-- Table rows will be added dynamically -->
-                        </tbody>
+                        <!-- </tbody>
                     </table>
                 </div>
             </div>
         </section>
-    </main>
+    </main> -->
 
     <!-- Silo Detail Modal -->
-    <div class="silo-detail-modal" id="siloDetailModal">
+    <!-- <div class="silo-detail-modal" id="siloDetailModal">
         <div class="silo-detail-content">
             <div class="silo-detail-header">
                 <h3><i class="fas fa-info-circle"></i>รายละเอียดไซโล</h3>
@@ -1180,10 +1180,10 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Silo Selection Modal -->
-    <div class="modal-overlay" id="siloSelectionModal">
+    <!-- <div class="modal-overlay" id="siloSelectionModal">
         <div class="modal">
             <div class="modal-header">
                 <h3><i class="fas fa-filter"></i> เลือกไซโลที่ต้องการแสดง</h3>
@@ -1192,9 +1192,9 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div class="silo-selection-list" id="siloSelectionList">
+                <div class="silo-selection-list" id="siloSelectionList"> -->
                     <!-- Silo selection items will be added here dynamically -->
-                </div>
+                <!-- </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="selectAllSilos()">เลือกทั้งหมด</button>
@@ -1202,10 +1202,10 @@
                 <button class="btn btn-primary" onclick="applySiloSelection()">ตกลง</button>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Export Modal -->
-    <div class="modal-overlay" id="exportModal">
+    <!-- <div class="modal-overlay" id="exportModal">
         <div class="modal">
             <div class="modal-header">
                 <h3><i class="fas fa-file-excel"></i> Export Excel</h3>
@@ -1216,9 +1216,9 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label for="exportBranch">เลือกสาขา</label>
-                    <select id="exportBranch" class="form-control">
+                    <select id="exportBranch" class="form-control"> -->
                         <!-- Options will be added dynamically -->
-                    </select>
+                    <!-- </select>
                 </div>
                 <div class="form-group">
                     <label for="exportType">เลือกประเภทข้อมูล</label>
@@ -1229,9 +1229,9 @@
                 </div>
                 <div class="form-group">
                     <label>เลือกไซโลที่ต้องการ Export</label>
-                    <div class="silo-selection-list" id="exportSiloList">
+                    <div class="silo-selection-list" id="exportSiloList"> -->
                         <!-- Silo selection items will be added here dynamically -->
-                    </div>
+                    <!-- </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -1239,10 +1239,10 @@
                 <button class="btn btn-primary" onclick="exportToExcel()">Export</button>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Add Silo Modal -->
-    <div class="modal-overlay" id="addSiloModal">
+    <!-- <div class="modal-overlay" id="addSiloModal">
         <div class="modal">
             <div class="modal-header">
                 <h3><i class="fas fa-plus"></i> เพิ่มไซโลใหม่</h3>
@@ -1275,10 +1275,10 @@
                 <button class="btn btn-primary" onclick="addNewSilo()">เพิ่มไซโล</button>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Add Branch Modal -->
-    <div class="modal-overlay" id="addBranchModal">
+    <!-- <div class="modal-overlay" id="addBranchModal">
         <div class="modal">
             <div class="modal-header">
                 <h3><i class="fas fa-plus"></i> เพิ่มสาขาใหม่</h3>
@@ -2183,5 +2183,17 @@
             renderCombinedChart(); // Start with chart view
         };
     </script>
+</body>
+</html> --> 
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    <h1>Welcome Admin: {{ username }}</h1>
+    <p>This is the Admin dashboard.</p>
+    <a href="{{ url_for('logout') }}">Logout</a>
 </body>
 </html>
