@@ -1,166 +1,155 @@
 #include "PanTiltScanner.h"
 
-// --- ค่าคงที่สำหรับ Calibration (จากโค้ดใหม่ของคุณ) ---
-const float CALIB_A = 0.0002;
-const float CALIB_B = 1.0310;
-const float CALIB_C = -6.9883;
+// --- CONFIG FOR WAVESHARE TOF (D) ---
+#define TOF_RX_PIN 16
+#define TOF_TX_PIN 17
+#define TOF_BAUD_RATE 921600
+#define TOF_HEADER 0x57
+#define TOF_FUNC_MARK 0x00
+#define TOF_FRAME_LEN 16
 
-// --- Constructor (ไม่เปลี่ยน) ---
 PanTiltScanner::PanTiltScanner(int yaw_dir_pin, int yaw_step_pin, int pitch_dir_pin, int pitch_step_pin)
   : _yawStepper(AccelStepper::DRIVER, yaw_step_pin, yaw_dir_pin),
     _pitchStepper(AccelStepper::DRIVER, pitch_step_pin, pitch_dir_pin)
 {
 }
-bool PanTiltScanner::hasNewLidarData()
-{
-  return _newLidarData;
-}
 
-float PanTiltScanner::getAndConsumeLidarData()
-{
-  _newLidarData = false; // "บริโภค" (Consume) ข้อมูล
+bool PanTiltScanner::hasNewLidarData() { return _newLidarData; }
+
+float PanTiltScanner::getAndConsumeLidarData() {
+  _newLidarData = false; 
   return _latestLidarDistance;
 }
 
 // -----------------------------------------------------------------
-// ++ begin() (เวอร์ชันอัปเดต) ++
+// INITIALIZATION
 // -----------------------------------------------------------------
-void PanTiltScanner::begin(long max_speed, long max_accel, int buzzer_pin, int red_pin, int yellow_pin, int green_pin, int enable_pin)
+void PanTiltScanner::begin(long max_speed, long max_accel, int status_led_pin, int enable_pin, AS5600* yawEnc, AS5600* pitchEnc)
 {
   _yawStepper.setMaxSpeed(max_speed);
   _yawStepper.setAcceleration(max_accel);
-  _yawStepper.setCurrentPosition(0); 
   _pitchStepper.setMaxSpeed(max_speed);
   _pitchStepper.setAcceleration(max_accel);
-  _pitchStepper.setCurrentPosition(0);
   
-  // --- บันทึกพิน ---
-  _BUZZER_PIN = buzzer_pin;
-  _RED_PIN = red_pin;
-  _YELLOW_PIN = yellow_pin;
-  _GREEN_PIN = green_pin;
+  _yawEncoder = yawEnc;
+  _pitchEncoder = pitchEnc;
+  _STATUS_LED_PIN = status_led_pin;
   _ENABLE_PIN = enable_pin;
-  
-  // --- ส่งเสียงตอนเริ่ม (Active-LOW) ---
-  if (_BUZZER_PIN != -1) {
-    digitalWrite(_BUZZER_PIN, LOW);  delay(50); 
-    digitalWrite(_BUZZER_PIN, HIGH); delay(50); 
-    digitalWrite(_BUZZER_PIN, LOW);  delay(50); 
-    digitalWrite(_BUZZER_PIN, HIGH);           
-  }
-  
-  Serial.println("[Core 0] Motor Controller Initialized.");
+
+  if (_STATUS_LED_PIN != -1) pinMode(_STATUS_LED_PIN, OUTPUT);
+  if (_ENABLE_PIN != -1) pinMode(_ENABLE_PIN, OUTPUT);
+
+  // We DO NOT read start offset anymore. 
+  // We rely on YAW_HOME_ANGLE (288) and PITCH_HOME_ANGLE (61) defined in .h
+
+  Serial.println("[Scanner] Init Complete. Hardware Targets: Yaw=288, Pitch=61.");
   _state = IDLE; 
-  _updateLEDs(); // ตั้งค่าไฟเขียว (Idle) + ปิด Enable
 }
 
 // -----------------------------------------------------------------
-// ++ เพิ่มฟังก์ชันที่หายไปนี้ (แก้บั๊กครั้งที่แล้ว) ++
+// DRIVE TO ABSOLUTE ZERO (INTEGRATED FROM TEST SKETCH)
 // -----------------------------------------------------------------
-void PanTiltScanner::setScanParameters(float y_start, float y_end, float p_start, float p_end, float p_step, long scan_speed)
-{
-  _yaw_start_deg = y_start;
-  _yaw_end_deg = y_end;
-  _pitch_start_deg = p_start;
-  _pitch_end_deg = p_end;
-  _pitch_step_deg = p_step;
-  _scan_speed_yaw = scan_speed;
-}
-
-// --- Task สำหรับ Core 1 (ย้าย Wire.begin() เข้ามาที่นี่) ---
-void PanTiltScanner::LidarReadTask(void * pvParameters)
-{
-  PanTiltScanner* scanner = static_cast<PanTiltScanner*>(pvParameters);
-
-  // 1. SLOW DOWN I2C (Important for stability)
-  Wire.begin(21, 22); 
-  Wire.setClock(100000); // 100kHz is much more stable than 400kHz
+void PanTiltScanner::DriveToAbsoluteZero() {
+  Serial.println("\n--- HOMING SEQUENCE START ---");
   
-  // 2. Configure Lidar
-  scanner->_lidar.begin(0, true);
-  scanner->_lidar.configure(4); 
+  // 1. Setup for Homing (Slower, Safe)
+  _yawStepper.setMaxSpeed(1000);
+  _yawStepper.setAcceleration(2000);
+  _pitchStepper.setMaxSpeed(1000);
+  _pitchStepper.setAcceleration(2000);
 
-  Serial.println("[Core 1] Lidar Task started.");
+  if (_ENABLE_PIN != -1) digitalWrite(_ENABLE_PIN, LOW); // Enable Motors
 
-  for(;;)
-  {
-    // --- TRY TO READ ---
-    float dist = scanner->_lidar.distance(false); // 'false' = no bias correction (faster)
-
-    // --- CHECK FOR HARDWARE FAILURE ---
-    // If dist is 0 or 1, it's a NACK/Timeout error
-    if (dist <= 1) { 
-        scanner->_lidarError = true;
-        scanner->_newLidarData = false;
-        
-        // OPTIONAL: Reset I2C if it fails consistently
-        // Wire.end();
-        // delay(10);
-        // Wire.begin(21, 22);
-        // Wire.setClock(100000);
-        
-    } else {
-        scanner->_lidarError = false;
-        scanner->_latestLidarDistance = dist;
-        scanner->_newLidarData = true;
-    }
+  // --- HOME YAW to 288.0 ---
+  if (_yawEncoder) {
+    Serial.print("Homing Yaw to "); Serial.println(YAW_HOME_ANGLE);
+    bool isHome = false;
+    int attempts = 0;
     
-    vTaskDelay(10 / portTICK_PERIOD_MS); 
-  }
-}
+    while (!isHome && attempts < 25) {
+      float raw = (_yawEncoder->readAngle() * 360.0) / 4096.0; // Read RAW
+      float error = _getShortestPathError(raw, YAW_HOME_ANGLE); // Calc error to 288
+      
+      Serial.printf("[YAW] Raw: %.2f | Error: %.2f\n", raw, error);
 
-// -----------------------------------------------------------------
-// ++ _calibrateLidar() (แทนที่ด้วยลอจิกใหม่ของคุณ) ++
-// -----------------------------------------------------------------
-float PanTiltScanner::_calibrateLidar(float raw_dist)
-{
- // If checking against a ruler shows it reads 60cm when it is really 29cm:
-  // Correction Factor = Real / Measured = 29 / 60 = 0.48
-  
-  float corrected_dist = raw_dist; 
-  return corrected_dist;
-}
+      if (abs(error) <= HOMING_DEADZONE) {
+        isHome = true;
+      } else {
+        long steps = _YawDegToSteps(error);
+        if (INVERT_YAW_HOMING) steps = -steps; // Apply Tested Inversion
 
-// -----------------------------------------------------------------
-// ++ _updateLEDs() (อัปเดตลอจิก Active HIGH/LOW) ++
-// -----------------------------------------------------------------
-void PanTiltScanner::_updateLEDs()
-{
-  // --- LED Logic (Active HIGH) ---
-  if (_RED_PIN != -1) {
-    if (_errorState) {
-      // สถานะ Error (สีแดง)
-      digitalWrite(_RED_PIN, HIGH);
-      digitalWrite(_YELLOW_PIN, LOW);
-      digitalWrite(_GREEN_PIN, LOW);
-    } else if (_state == IDLE || _state == FINISHED) {
-      // สถานะ ว่างงาน (สีเขียว)
-      digitalWrite(_RED_PIN, LOW);
-      digitalWrite(_YELLOW_PIN, LOW);
-      digitalWrite(_GREEN_PIN, HIGH);
-    } else {
-      // สถานะ ทำงาน (สีเหลือง)
-      digitalWrite(_RED_PIN, LOW);
-      digitalWrite(_YELLOW_PIN, HIGH);
-      digitalWrite(_GREEN_PIN, LOW);
+        // Minimum move check to overcome friction
+        if (abs(steps) < 10) steps = (steps > 0) ? 10 : -10;
+
+        _yawStepper.move(steps);
+        while (_yawStepper.distanceToGo() != 0) _yawStepper.run();
+        delay(500); // Settle time
+      }
+      attempts++;
     }
+    _yawStepper.setCurrentPosition(0); // 0 Steps = 288 Degrees
   }
 
-  // --- Enable Pin Logic (Active LOW) ---
-  if (_ENABLE_PIN != -1) {
-    if (_state == IDLE || _state == FINISHED || _errorState) {
-      digitalWrite(_ENABLE_PIN, HIGH); // ปิดมอเตอร์ (ไม่กินไฟ)
-    } else {
-      digitalWrite(_ENABLE_PIN, LOW); // เปิดมอเตอร์ (ทำงาน)
+  // --- HOME PITCH to 61.0 ---
+  if (_pitchEncoder) {
+    Serial.print("Homing Pitch to "); Serial.println(PITCH_HOME_ANGLE);
+    bool isHome = false;
+    int attempts = 0;
+    
+    while (!isHome && attempts < 25) {
+      float raw = (_pitchEncoder->readAngle() * 360.0) / 4096.0;
+      float error = _getShortestPathError(raw, PITCH_HOME_ANGLE);
+      
+      Serial.printf("[PITCH] Raw: %.2f | Error: %.2f\n", raw, error);
+
+      if (abs(error) <= HOMING_DEADZONE) {
+        isHome = true;
+      } else {
+        long steps = _PitchDegToSteps(error);
+        if (INVERT_PITCH_HOMING) steps = -steps; // Apply Tested Inversion
+
+        if (abs(steps) < 10) steps = (steps > 0) ? 10 : -10;
+
+        _pitchStepper.move(steps);
+        while (_pitchStepper.distanceToGo() != 0) _pitchStepper.run();
+        delay(500);
+      }
+      attempts++;
     }
+    _pitchStepper.setCurrentPosition(0); // 0 Steps = 61 Degrees
   }
+
+  // Restore High Speeds for Scanning
+  _yawStepper.setMaxSpeed(16000);     // Restore from setup
+  _yawStepper.setAcceleration(8000);
+  _pitchStepper.setMaxSpeed(16000);
+  _pitchStepper.setAcceleration(8000);
+
+  _state = IDLE;
+  Serial.println("--- HOMING COMPLETE ---");
 }
 
 // -----------------------------------------------------------------
-// (ฟังก์ชันที่เหลือทั้งหมดเหมือนเดิมเป๊ะ)
-// (StartFullScan, run, logCurrentPosition, _CalculateXYZ, 
-//  setLEDError, ResetOrigin, set... , Get..., ...ToSteps, ...ToDeg)
+// CORE LOGIC
 // -----------------------------------------------------------------
+
+void PanTiltScanner::logCurrentPosition(float distance) 
+{
+  if (_state != SCANNING_FWD && _state != SCANNING_REV) return;
+
+  // USE ENCODERS FOR CALCULATION
+  // GetEncoderYaw() now returns (Raw - 288), so it gives 0.0 when at home.
+  float calc_yaw = (_yawEncoder) ? GetEncoderYaw() : GetCurrentYaw();
+  float calc_pitch = (_pitchEncoder) ? GetEncoderPitch() : GetCurrentPitch();
+
+  // Bounds Check
+  if (_is_scanning_fwd && calc_yaw > (_yaw_end_deg + 5.0)) return; // Increased margin for Deadzone
+  if (!_is_scanning_fwd && calc_yaw < (_yaw_start_deg - 5.0)) return;
+
+  float calibrated_dist = _calibrateLidar(distance);
+  XYZPoint newPoint = _CalculateXYZ(calibrated_dist, calc_yaw, calc_pitch);
+  _pointQueue.push(newPoint);
+}
 
 void PanTiltScanner::StartFullScan()
 {
@@ -170,36 +159,48 @@ void PanTiltScanner::StartFullScan()
   }
   std::queue<XYZPoint> empty;
   std::swap(_pointQueue, empty);
+  
   xTaskCreatePinnedToCore(
-    LidarReadTask, "LidarTask", 10000, this, 1, &_lidarTaskHandle, 1
+    LidarReadTask, "LidarTask", 10000, this, 1, &_lidarTaskHandle, 0
   );
   _startStateMachine();
 }
 
 void PanTiltScanner::_startStateMachine()
 {
-  Serial.println("[Core 0] Moving to starting position...");
+  Serial.println("[Core 0] Starting Scan...");
   _current_pitch_target_deg = _pitch_start_deg;
+  
+  // Move to Start
   _pitchStepper.moveTo(_PitchDegToSteps(_current_pitch_target_deg));
   _yawStepper.moveTo(_YawDegToSteps(_yaw_start_deg));
+  
   _is_scanning_fwd = true; 
   _state = MOVING_TO_START;
-  _updateLEDs(); 
 }
 
 void PanTiltScanner::run()
 {
-  if (_state == IDLE) {
-    return; 
+  _handleStatusLED();
+
+  if (_ENABLE_PIN != -1) {
+    if (_state == IDLE || _state == FINISHED || _errorState) {
+      digitalWrite(_ENABLE_PIN, HIGH); 
+    } else {
+      digitalWrite(_ENABLE_PIN, LOW); 
+    }
   }
+
+  if (_state == IDLE) return; 
+  
   if (_state == FINISHED) {
     if (_lidarTaskHandle != NULL) {
-      Serial.println("[Core 0] Scan finished. Stopping Lidar Task (Core 1)...");
       vTaskDelete(_lidarTaskHandle);
       _lidarTaskHandle = NULL;
     }
     return; 
   }
+
   if (_state == SCANNING_FWD || _state == SCANNING_REV) {
     _pitchStepper.run(); 
     _yawStepper.runSpeed(); 
@@ -207,75 +208,56 @@ void PanTiltScanner::run()
     _pitchStepper.run();
     _yawStepper.run(); 
   }
-  float current_yaw = GetCurrentYaw(); 
+
+  float current_yaw_steps = _YawStepsToDeg(_yawStepper.currentPosition()); 
+
   switch (_state) {
     case MOVING_TO_START:
       if (!_yawStepper.isRunning() && !_pitchStepper.isRunning()) {
-        // Serial.println("[Core 0] At start. Begin scanning FWD.");
         _is_scanning_fwd = true; 
         _yawStepper.setSpeed(_scan_speed_yaw);
         _state = SCANNING_FWD;
-        _updateLEDs();
       }
       break;
     case SCANNING_FWD:
-      if (current_yaw >= _yaw_end_deg) {
-        // Serial.println("[Core 0] Hit FWD end. Changing row...");
+      if (current_yaw_steps >= _yaw_end_deg) {
         _yawStepper.stop(); 
         _state = CHANGING_ROW; 
         _current_pitch_target_deg += _pitch_step_deg; 
         _pitchStepper.moveTo(_PitchDegToSteps(_current_pitch_target_deg)); 
-        _updateLEDs();
       }
       break;
     case SCANNING_REV:
-      if (current_yaw <= _yaw_start_deg) {
-        // Serial.println("[Core 0] Hit REV end. Changing row...");
+      if (current_yaw_steps <= _yaw_start_deg) {
         _yawStepper.stop(); 
         _state = CHANGING_ROW; 
         _current_pitch_target_deg += _pitch_step_deg; 
         _pitchStepper.moveTo(_PitchDegToSteps(_current_pitch_target_deg)); 
-        _updateLEDs();
       }
       break;
     case CHANGING_ROW:
       if (!_pitchStepper.isRunning() && !_yawStepper.isRunning()) { 
         if (_current_pitch_target_deg > _pitch_end_deg) {
-          Serial.println("[Core 0] Scan Complete. Returning to Home (0,0)...");
+          Serial.println("Scan Complete. Returning Home...");
           _pitchStepper.moveTo(0); 
           _yawStepper.moveTo(0);   
           _state = RETURNING_HOME; 
-          _updateLEDs();
         } else {
           if (_is_scanning_fwd) { 
-            //  Serial.println("[Core 0] Row changed. Begin scanning REV.");
              _is_scanning_fwd = false;
              _yawStepper.setSpeed(-_scan_speed_yaw); 
              _state = SCANNING_REV;
-             _updateLEDs();
           } else {
-            //  Serial.println("[Core 0] Row changed. Begin scanning FWD.");
              _is_scanning_fwd = true;
              _yawStepper.setSpeed(_scan_speed_yaw); 
              _state = SCANNING_FWD;
-             _updateLEDs();
           }
         }
       }
       break;
     case RETURNING_HOME:
       if (!_pitchStepper.isRunning() && !_yawStepper.isRunning()) {
-        if (_BUZZER_PIN != -1) {
-          digitalWrite(_BUZZER_PIN, LOW);  delay(50); 
-          digitalWrite(_BUZZER_PIN, HIGH); delay(50); 
-          digitalWrite(_BUZZER_PIN, LOW);  delay(50); 
-          digitalWrite(_BUZZER_PIN, HIGH); delay(50); 
-          digitalWrite(_BUZZER_PIN, LOW);  delay(50); 
-          digitalWrite(_BUZZER_PIN, HIGH);
-        }
-        Serial.println("[Core 0] Arrived at Home. System idle.");
         _state = FINISHED; 
-        _updateLEDs(); 
       }
       break;
     case FINISHED:
@@ -283,131 +265,125 @@ void PanTiltScanner::run()
   }
 }
 
-void PanTiltScanner::logCurrentPosition(float distance) 
+// -----------------------------------------------------------------
+// HELPER FUNCTIONS
+// -----------------------------------------------------------------
+void PanTiltScanner::LidarReadTask(void * pvParameters)
 {
-  if (_state != SCANNING_FWD && _state != SCANNING_REV) {
-    return;
+  PanTiltScanner* scanner = static_cast<PanTiltScanner*>(pvParameters);
+  Serial2.begin(TOF_BAUD_RATE, SERIAL_8N1, TOF_RX_PIN, TOF_TX_PIN);
+  byte buffer[TOF_FRAME_LEN];
+  
+  for(;;) {
+    if (Serial2.available() >= TOF_FRAME_LEN) {
+      if (Serial2.read() == TOF_HEADER) {
+        if (Serial2.read() == TOF_FUNC_MARK) {
+           buffer[0] = TOF_HEADER; buffer[1] = TOF_FUNC_MARK;
+           Serial2.readBytes(&buffer[2], TOF_FRAME_LEN - 2);
+           uint8_t checksum = 0;
+           for (int i = 0; i < TOF_FRAME_LEN - 1; i++) checksum += buffer[i];
+
+           if (checksum == buffer[TOF_FRAME_LEN - 1]) {
+             uint32_t dist_mm = buffer[8] | (buffer[9] << 8) | (buffer[10] << 16);
+             if (dist_mm > 0 && dist_mm < 50000) { 
+               scanner->_latestLidarDistance = (float)dist_mm / 10.0;
+               scanner->_newLidarData = true;
+               scanner->_lidarError = false;
+             } else {
+               scanner->_lidarError = true; 
+             }
+           }
+        }
+      }
+    } else {
+      vTaskDelay(1 / portTICK_PERIOD_MS); 
+    }
   }
-  float current_yaw = GetCurrentYaw();
-  float current_pitch = GetCurrentPitch();
-  if (_is_scanning_fwd && current_yaw >= _yaw_end_deg) { return; }
-  if (!_is_scanning_fwd && current_yaw <= _yaw_start_deg) { return; }
-  float calibrated_dist = _calibrateLidar(distance);
-  XYZPoint newPoint = _CalculateXYZ(calibrated_dist, current_yaw, current_pitch);
-  _pointQueue.push(newPoint);
 }
 
-bool PanTiltScanner::GetNextPoint(XYZPoint &point)
-{
-  if (_pointQueue.empty()) {
-    return false; 
+void PanTiltScanner::_handleStatusLED() {
+  if (_STATUS_LED_PIN == -1) return;
+  unsigned long currentMillis = millis();
+  int blinkInterval = 0;
+  if (_errorState || _lidarError) blinkInterval = 100; 
+  else if (_state != IDLE && _state != FINISHED) blinkInterval = 500; 
+  else blinkInterval = 0; 
+
+  if (blinkInterval == 0) {
+     digitalWrite(_STATUS_LED_PIN, HIGH);
+     return;
   }
-  point = _pointQueue.front(); 
-  _pointQueue.pop();           
-  return true;                 
-}
-
-size_t PanTiltScanner::getQueueSize()
-{
-  return _pointQueue.size();
-}
-
-ScanState PanTiltScanner::getState()
-{
-  return _state;
-}
-
-void PanTiltScanner::setLEDError(bool error) {
-  if (_errorState != error) {
-    _errorState = error;
-    _updateLEDs();
+  if (currentMillis - _lastBlinkTime >= blinkInterval) {
+    _lastBlinkTime = currentMillis;
+    _ledState = !_ledState;
+    digitalWrite(_STATUS_LED_PIN, _ledState ? HIGH : LOW);
   }
+}
+
+float PanTiltScanner::_readEncoderDeg(AS5600* enc, float offset) {
+  if (!enc) return 0.0;
+  float rawDeg = (enc->readAngle() * 360.0) / 4096.0;
+  
+  // SUBTRACT OFFSET (Raw 288 - Offset 288 = 0)
+  float realDeg = rawDeg - offset;
+  
+  while (realDeg > 180.0) realDeg -= 360.0;
+  while (realDeg < -180.0) realDeg += 360.0;
+  return realDeg;
+}
+
+float PanTiltScanner::_getShortestPathError(float current, float target) {
+  float error = target - current;
+  if (error > 180.0) error -= 360.0;
+  if (error < -180.0) error += 360.0;
+  return error;
+}
+
+// Getters/Setters
+float PanTiltScanner::GetCurrentYaw() { return _YawStepsToDeg(_yawStepper.currentPosition()); }
+float PanTiltScanner::GetCurrentPitch() { return _PitchStepsToDeg(_pitchStepper.currentPosition()); }
+
+// IMPORTANT: Pass the HOME ANGLE as the offset here
+float PanTiltScanner::GetEncoderYaw() { return _readEncoderDeg(_yawEncoder, YAW_HOME_ANGLE); }
+float PanTiltScanner::GetEncoderPitch() { return _readEncoderDeg(_pitchEncoder, PITCH_HOME_ANGLE); }
+
+void PanTiltScanner::setScanParameters(float y_start, float y_end, float p_start, float p_end, float p_step, long scan_speed) {
+  _yaw_start_deg = y_start; _yaw_end_deg = y_end;
+  _pitch_start_deg = p_start; _pitch_end_deg = p_end; _pitch_step_deg = p_step;
+  _scan_speed_yaw = scan_speed;
 }
 
 void PanTiltScanner::ResetOrigin() {
-  Serial.println("Resetting Origin...");
-  delay(100); 
-  _yawStepper.stop(); 
-  _pitchStepper.stop();
-  _yawStepper.setCurrentPosition(0); 
-  _pitchStepper.setCurrentPosition(0);
-  _state = IDLE; 
-  _updateLEDs(); 
-  Serial.println("Origin Reset. Ready.");
+  Serial.println("Reset Origin -> Re-Homing...");
+  DriveToAbsoluteZero(); 
 }
 
-void PanTiltScanner::setInvertVertical(bool invert) {
-  _invert_vertical = invert;
+bool PanTiltScanner::GetNextPoint(XYZPoint &point) {
+  if (_pointQueue.empty()) return false; 
+  point = _pointQueue.front(); _pointQueue.pop(); return true; 
 }
-
-void PanTiltScanner::setZAxisUp(bool z_is_up) {
-  _z_axis_is_up = z_is_up;
-}
-
-float PanTiltScanner::GetCurrentYaw() {
-  return _YawStepsToDeg(_yawStepper.currentPosition());
-}
-
-float PanTiltScanner::GetCurrentPitch() {
-  return _PitchStepsToDeg(_pitchStepper.currentPosition());
-}
+size_t PanTiltScanner::getQueueSize() { return _pointQueue.size(); }
+ScanState PanTiltScanner::getState() { return _state; }
+void PanTiltScanner::setLEDError(bool error) { _errorState = error; }
+void PanTiltScanner::setInvertVertical(bool invert) { _invert_vertical = invert; }
+void PanTiltScanner::setZAxisUp(bool z_is_up) { _z_axis_is_up = z_is_up; }
+float PanTiltScanner::_calibrateLidar(float raw_dist) { return raw_dist; }
 
 XYZPoint PanTiltScanner::_CalculateXYZ(float distance_cm, float yaw_deg, float pitch_deg) {
-  // 1. Convert Angles to Radians
-  // theta (θ) = Yaw (Angle in the XY plane)
-  // delta (δ) = Pitch (Elevation angle from the horizon)
   float theta = yaw_deg * (M_PI / 180.0);
   float delta = pitch_deg * (M_PI / 180.0);
-
-  // 2. Define Rho (ρ) - The Total Radius
-  // CRITICAL: We add the physical offset to the measured distance here.
-  // This assumes the Lidar Lens rotates WITH the pitch motor.
-  float OFFSET_R = 4.5; // Distance from Motor Axis to Lidar Lens
   float rho = distance_cm; 
-
-  // 3. Apply the Formula from your Screenshot
-  // x = ρ cos(δ) cos(θ)
-  // y = ρ cos(δ) sin(θ)
-  // z = ρ sin(δ)
-  
   float x = rho * cos(delta) * cos(theta);
   float y = rho * cos(delta) * sin(theta);
   float z = rho * sin(delta);
-
-  // 4. Handle Axis Orientations
-  if (_invert_vertical) {
-    z = -z; 
-  }
-
+  if (_invert_vertical) z = -z; 
   XYZPoint point;
-  if (_z_axis_is_up) {
-    // Standard Z-Up (Like the diagram)
-    point.x = x;
-    point.y = y;
-    point.z = z;
-  } else {
-    // Y-Up (Common in computer graphics/Unity)
-    // We rotate the result to match Y-up convention
-    point.x = x;
-    point.y = z;  // Z becomes Y (Height)
-    point.z = -y; // Y becomes Z (Depth)
-  }
-  
+  if (_z_axis_is_up) { point.x = x; point.y = y; point.z = z; } 
+  else { point.x = x; point.y = z; point.z = -y; }
   return point;
 }
 
-long PanTiltScanner::_YawDegToSteps(float deg) {
-  return round(deg * (_YAW_STEPS_PER_REV / 360.0));
-}
-
-long PanTiltScanner::_PitchDegToSteps(float deg) {
-  return round(deg * (_PITCH_STEPS_PER_REV / 360.0));
-}
-
-float PanTiltScanner::_YawStepsToDeg(long steps) {
-  return (float)steps * (360.0 / _YAW_STEPS_PER_REV);
-}
-
-float PanTiltScanner::_PitchStepsToDeg(long steps) {
-  return (float)steps * (360.0 / _PITCH_STEPS_PER_REV);
-}
+long PanTiltScanner::_YawDegToSteps(float deg) { return round(deg * (_YAW_STEPS_PER_REV / 360.0)); }
+long PanTiltScanner::_PitchDegToSteps(float deg) { return round(deg * (_PITCH_STEPS_PER_REV / 360.0)); }
+float PanTiltScanner::_YawStepsToDeg(long steps) { return (float)steps * (360.0 / _YAW_STEPS_PER_REV); }
+float PanTiltScanner::_PitchStepsToDeg(long steps) { return (float)steps * (360.0 / _PITCH_STEPS_PER_REV); }
