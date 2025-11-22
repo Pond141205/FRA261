@@ -17,6 +17,10 @@ if not os.path.exists(os.path.join(basedir, 'Database')):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'Database', 'Server_db.sqlite3')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SESSION_COOKIE_SECURE'] = False  # สำหรับ development
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'connect_args': {'timeout': 30},
     'pool_timeout': 30
@@ -159,17 +163,17 @@ def login():
     if request.method == "POST":
         username = request.form['username']
         password = request.form['password']
-        # ✅ แก้ไข: ตรวจสอบเฉพาะ user ที่ active
         user = User.query.filter_by(username=username, is_active=True).first()
         if user and user.check_password(password):
             session['user_id'] = user.id
             session['username'] = user.username
             session['role'] = user.role
             
+            # ✅ Redirect ตาม role
             if user.role == "admin":
-                return redirect(url_for("admin_dashboard"))
+                return redirect(url_for("overview_dashboard"))  # Admin ไป overview
             else:
-                return redirect(url_for("user_dashboard"))
+                return redirect(url_for("user_dashboard"))  # User ไป dashboard ปกติ
         else:
             error = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"
     return render_template("login.html", error=error)
@@ -181,8 +185,18 @@ def logout():
 
 @app.route("/admin/dashboard")
 def admin_dashboard():
-    if 'user_id' not in session or session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    # ❌ TEMPORARY: bypass login for development
+    # if 'user_id' not in session or session.get('role') != 'admin':
+    #     return redirect(url_for('login'))
+    
+    # ✅ FOR DEVELOPMENT: auto-login as admin
+    user = User.query.filter_by(username='admin', is_active=True).first()
+    if user:
+        session['user_id'] = user.id
+        session['username'] = user.username
+        session['role'] = user.role
+        print(f"✅ Auto-logged in as {user.username}")
+    
     return render_template("admin_dashboard.html")
 
 @app.route("/user/dashboard")
@@ -428,7 +442,10 @@ def get_all_branches():
 # API สำหรับตรวจสอบข้อมูลผู้ใช้ปัจจุบัน
 @app.route("/api/current_user", methods=["GET"])
 def get_current_user():
+    print(f"🔍 /api/current_user called - session: user_id={session.get('user_id')}")
+    
     if 'user_id' not in session:
+        print("❌ No user_id in session")
         return jsonify({"error": "Not logged in"}), 401
     
     try:
@@ -436,32 +453,23 @@ def get_current_user():
         user = User.query.filter_by(id=user_id, is_active=True).first()
         
         if not user:
+            print(f"❌ User {user_id} not found or inactive")
+            session.clear()
             return jsonify({"error": "User not found"}), 404
         
         user_data = {
             "id": user.id,
             "username": user.username,
             "role": user.role,
-            "allowed_branches": [],
-            "silo_count": 0
+            "is_logged_in": True
         }
         
-        if user.role == 'admin':
-            user_data["allowed_branches"] = ["ทั้งหมด"]
-            user_data["silo_count"] = SiloMeta.query.count()
-        else:
-            user_branches = UserBranchAccess.query.filter_by(user_id=user_id).all()
-            user_data["allowed_branches"] = [branch.province for branch in user_branches]
-            
-            if user_branches:
-                allowed_provinces = [branch.province for branch in user_branches]
-                user_data["silo_count"] = SiloMeta.query.filter(SiloMeta.province.in_(allowed_provinces)).count()
-        
+        print(f"✅ Returning user data: {user.username} (role: {user.role})")
         return jsonify(user_data)
         
     except Exception as e:
-        print(f"Error in get_current_user: {str(e)}")
-        return jsonify({"error": f"Failed to retrieve user data: {str(e)}"}), 500
+        print(f"❌ Error in get_current_user: {str(e)}")
+        return jsonify({"error": "Server error"}), 500
 
 # Admin management APIs
 @app.route("/api/admin/users", methods=["GET"])
@@ -862,8 +870,16 @@ def debug_users():
 
 @app.route("/overview")
 def overview_dashboard():
+    # ✅ อนุญาตเฉพาะ Admin เท่านั้น
     if 'user_id' not in session or session.get('role') != 'admin':
         return redirect(url_for('login'))
+    return render_template("overview_dashboard.html")
+    
+    # ✅ ตรวจสอบสิทธิ์ตาม role
+    user = User.query.filter_by(id=session['user_id'], is_active=True).first()
+    if not user:
+        return redirect(url_for('login'))
+    
     return render_template("overview_dashboard.html")
 
 # API for overview data
