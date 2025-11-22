@@ -45,7 +45,7 @@ class VolumeData(db.Model):
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     volume = db.Column(db.Float)
     volume_percentage = db.Column(db.Float)
-    mass_kg = db.Column(db.Float) # <-- NEW COLUMN ADDED
+    
     
 # ====================================================================
 # 3. WORKER FUNCTION
@@ -105,15 +105,15 @@ def run_mesh_reconstruction():
             new_volume_entry = VolumeData(
                 timestamp=datetime.now(timezone.utc),
                 device_id=job.device_id,
-                volume=material_volume,
+                volume=mass_kg,
                 volume_percentage=volume_percentage,
-                mass_kg=mass_kg # <-- NEW VALUE COMMITTED
+               
             )
             db.session.add(new_volume_entry)
             db.session.commit()
             
-            print(f"-> SUCCESSFULLY processed. Volume saved: {material_volume:.4f} m^3")
-            print(f"-> Mass calculated: {mass_kg:.2f} kg")
+            print(f"-> SUCCESSFULLY processed. Volume saved: {mass_kg:.2f} kg")
+           # print(f"-> Mass calculated: {mass_kg:.2f} kg")
             print(f"-> Percentage: {volume_percentage:.2f}% full.")
             
             return True 
