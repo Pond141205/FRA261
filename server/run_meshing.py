@@ -1,7 +1,7 @@
 import numpy as np
 import open3d as o3d
 from scipy.spatial import ConvexHull
-from datetime import datetime, timezone # Added timezone import
+from datetime import datetime, timezone
 import json
 import os
 import io
@@ -20,12 +20,16 @@ db = SQLAlchemy(app)
 
 # --- GLOBAL CONSTANTS ---
 TOTAL_SILO_CAPACITY_M3 = 0.288583 
-CEMENT_DENSITY = 1440.0 
+CEMENT_DENSITY = 1440.0 # kg/m^3 
 # ---------------------------------------------
 
 # ====================================================================
-# 2. MODEL DEFINITIONS (Updated VolumeData)
+# 2. MODEL DEFINITIONS (UPDATED VolumeData with mass_kg)
 # ====================================================================
+class SiloMeta(db.Model):
+    device_id = db.Column(db.String(50), primary_key=True) 
+    __tablename__ = 'silo_meta'
+
 class MergedData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
@@ -40,14 +44,15 @@ class VolumeData(db.Model):
     device_id = db.Column(db.String(50), db.ForeignKey('silo_meta.device_id'), nullable=False)
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     volume = db.Column(db.Float)
-    volume_percentage = db.Column(db.Float) # <-- NEW COLUMN
+    volume_percentage = db.Column(db.Float)
+    mass_kg = db.Column(db.Float) # <-- NEW COLUMN ADDED
     
 # ====================================================================
 # 3. WORKER FUNCTION
 # ====================================================================
 def run_mesh_reconstruction():
     """
-    Finds the next unprocessed point cloud, calculates the volume and percentage, 
+    Finds the next unprocessed point cloud, calculates the volume, percentage, and mass, 
     and updates DB tables.
     """
     with app.app_context():
@@ -77,37 +82,38 @@ def run_mesh_reconstruction():
             hull = ConvexHull(cleaned_points)
             air_volume = hull.volume
 
-            # Unit Check
+            # 3. FINAL CALCULATIONS
             if air_volume > TOTAL_SILO_CAPACITY_M3 * 10: 
                 air_volume /= 1_000_000_000.0
             
-            # 3. FINAL CALCULATIONS
             material_volume = TOTAL_SILO_CAPACITY_M3 - air_volume
             
             if material_volume < 0:
                 material_volume = 0.0 
             
-            # --- NEW CALCULATION ---
+            # --- NEW MASS CALCULATION ---
+            mass_kg = material_volume * CEMENT_DENSITY
+            # ----------------------------
+            
             volume_percentage = (material_volume / TOTAL_SILO_CAPACITY_M3) * 100.0
-            # Ensure percentage is clamped between 0 and 100 due to possible scan errors
             volume_percentage = max(0.0, min(100.0, volume_percentage))
-            # -----------------------
-
+            
             # --- 4. DATABASE UPDATES ---
             
             job.mesh_processed = True
             
-            # Storing result in VolumeData (with new percentage field)
             new_volume_entry = VolumeData(
                 timestamp=datetime.now(timezone.utc),
                 device_id=job.device_id,
                 volume=material_volume,
-                volume_percentage=volume_percentage # <-- NEW FIELD PUSHED
+                volume_percentage=volume_percentage,
+                mass_kg=mass_kg # <-- NEW VALUE COMMITTED
             )
             db.session.add(new_volume_entry)
             db.session.commit()
             
             print(f"-> SUCCESSFULLY processed. Volume saved: {material_volume:.4f} m^3")
+            print(f"-> Mass calculated: {mass_kg:.2f} kg")
             print(f"-> Percentage: {volume_percentage:.2f}% full.")
             
             return True 
