@@ -2,11 +2,741 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>User Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Fibo Silo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Reset และ CSS Variables */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0EA5E9;
+            --primary-light: #E0F2FE;
+            --primary-dark: #0284C7;
+            --secondary: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --light: #F0F9FF;
+            --dark: #4B5563;
+            --white: #FFFFFF;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Noto Sans Thai', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--white);
+            box-shadow: var(--shadow);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-details {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+        }
+
+        .user-details img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            padding: 0.75rem 2rem;
+            background: var(--white);
+            border-bottom: 1px solid #BAE6FD;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb .current {
+            color: var(--dark);
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        main {
+            display: flex;
+            height: calc(100vh - 132px);
+        }
+
+        /* Sidebar */
+        #branches {
+            width: 320px;
+            background: var(--white);
+            border-right: 1px solid #BAE6FD;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+
+        .branches-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .branches-header h2 {
+            color: var(--primary);
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .branch-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .branch-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid #BAE6FD;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .branch-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .branch-card.selected {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            transform: scale(1.02);
+        }
+
+        .branch-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .branch-header h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .branch-header p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .branch-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .branch-progress {
+            margin-top: 0.75rem;
+        }
+
+        .branch-progress span {
+            font-size: 0.85rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #BAE6FD;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            transition: width 0.5s ease;
+        }
+
+        /* Content Area */
+        #silos {
+            flex: 1;
+            background: var(--light);
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header h2 {
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .branch-info {
+            background: var(--white);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .branch-info i {
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .branch-details h3 {
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        .branch-details p {
+            font-size: 0.85rem;
+            color: var(--dark);
+            opacity: 0.8;
+        }
+
+        /* Silo Grid */
+        .silo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .silo-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .silo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .silo-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+
+        .silo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .silo-title h4 {
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .silo-title p {
+            font-size: 0.85rem;
+            color: var(--dark);
+            opacity: 0.8;
+        }
+
+        /* Silo Tank */
+        .silo-tank {
+            position: relative;
+            height: 180px;
+            background: #BAE6FD;
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 1rem;
+            border: 2px solid #7DD3FC;
+        }
+
+        .silo-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            border-radius: var(--radius) var(--radius) 0 0;
+            transition: height 1s ease;
+            background: linear-gradient(to top, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+
+        .silo-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 30%);
+        }
+
+        .silo-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            text-align: center;
+            color: var(--dark);
+            z-index: 2;
+        }
+
+        .silo-text .percentage {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .silo-text .amount {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Chart Section */
+        .chart-section {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-top: 1rem;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-header h3 {
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            main {
+                flex-direction: column;
+            }
+            
+            #branches {
+                width: 100%;
+                height: auto;
+                max-height: 30vh;
+            }
+            
+            .branch-list {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+            
+            .branch-card {
+                min-width: 250px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .silo-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome User: {{ username }}</h1>
-    <p>This is the User dashboard.</p>
-    <a href="{{ url_for('logout') }}">Logout</a>
+    <header>
+        <div class="logo">
+            <i class="fas fa-warehouse"></i>
+            <span>FIBO SILO USER</span>
+        </div>
+        <div class="user-info">
+            <div class="user-details">
+                <img src="https://ui-avatars.com/api/?name=User&background=0EA5E9&color=fff" alt="User">
+                <span id="username-display">ผู้ใช้งาน</span>
+            </div>
+            <a href="/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+            </a>
+        </div>
+    </header>
+
+    <div class="breadcrumb">
+        <span class="current" id="current-breadcrumb">แดชบอร์ดผู้ใช้งาน</span>
+    </div>
+
+    <main>
+        <aside id="branches">
+            <div class="branches-header">
+                <h2><i class="fas fa-map-marker-alt"></i>สาขาที่ดูแล</h2>
+            </div>
+            <div id="branch-list" class="branch-list">
+                <div style="text-align: center; padding: 2rem; color: var(--dark);">
+                    <div class="loading"></div>
+                    <div>กำลังโหลดสาขา...</div>
+                </div>
+            </div>
+        </aside>
+
+        <section id="silos">
+            <div class="section-header">
+                <h2><i class="fas fa-warehouse"></i>ไซโลในสาขา</h2>
+            </div>
+            <div class="branch-info">
+                <i class="fas fa-info-circle"></i>
+                <div class="branch-details">
+                    <h3 id="current-branch-name">เลือกสาขาเพื่อดูข้อมูล</h3>
+                    <p id="current-branch-location">-</p>
+                </div>
+            </div>
+            <div id="silo-grid" class="silo-grid">
+                <div style="text-align: center; padding: 2rem; color: var(--dark); width: 100%;">
+                    <div>เลือกสาขาเพื่อดูข้อมูลไซโล</div>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <div class="chart-header">
+                    <h3><i class="fas fa-chart-line"></i>กราฟแสดงข้อมูลไซโล</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="silo-chart"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Global variables
+        let branches = {};
+        let selectedBranch = null;
+        let siloChart = null;
+
+        // API Base URL
+        const API_BASE = window.location.origin;
+
+        // API Functions
+        async function fetchUserBranches() {
+            try {
+                const response = await fetch(`${API_BASE}/api/user/branches`);
+                if (!response.ok) throw new Error('Failed to fetch branches');
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching branches:', error);
+                throw error;
+            }
+        }
+
+        async function fetchBranchDetails(branchId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/branches/${branchId}`);
+                if (!response.ok) throw new Error('Failed to fetch branch details');
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching branch details:', error);
+                throw error;
+            }
+        }
+
+        // UI Functions
+        async function renderBranches() {
+            const container = document.getElementById('branch-list');
+            
+            const branchArray = Object.values(branches);
+            
+            if (branchArray.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--dark);">ไม่มีสาขาที่ดูแล</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            for (const branch of branchArray) {
+                const totalUsed = branch.silos ? branch.silos.reduce((a, b) => a + b.current_amount, 0) : 0;
+                const percent = Math.round(totalUsed / branch.total_capacity * 100);
+                const isSelected = branch.id === selectedBranch;
+                
+                html += `
+                    <div class="branch-card ${isSelected ? 'selected' : ''}" onclick="selectBranch(${branch.id})">
+                        <div class="branch-header">
+                            <div>
+                                <h3>${branch.name}</h3>
+                                <p>${branch.location}</p>
+                            </div>
+                            <div class="branch-count">${branch.silos ? branch.silos.length : 0} ไซโล</div>
+                        </div>
+                        <div class="branch-progress">
+                            <span>ใช้ไปแล้ว: ${totalUsed} / ${branch.total_capacity} ตัน (${percent}%)</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width:${percent}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        async function selectBranch(branchId) {
+            try {
+                selectedBranch = branchId;
+                await renderBranches();
+                await renderSilos();
+                updateBranchInfo();
+                renderChart();
+            } catch (error) {
+                console.error('Error selecting branch:', error);
+                alert('เกิดข้อผิดพลาดในการเลือกสาขา');
+            }
+        }
+
+        async function renderSilos() {
+            const siloContainer = document.getElementById('silo-grid');
+            
+            if (!selectedBranch || !branches[selectedBranch] || !branches[selectedBranch].silos) {
+                siloContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--dark);">ไม่มีข้อมูลไซโล</div>';
+                return;
+            }
+            
+            const branch = branches[selectedBranch];
+            
+            if (branch.silos.length === 0) {
+                siloContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--dark);">ไม่มีไซโลในสาขานี้</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            branch.silos.forEach((silo) => {
+                const percent = Math.round(silo.current_amount / silo.capacity * 100);
+                
+                html += `
+                    <div class="silo-card">
+                        <div class="silo-header">
+                            <div class="silo-title">
+                                <h4>${silo.name}</h4>
+                                <p>${silo.material}</p>
+                            </div>
+                        </div>
+                        <div class="silo-tank">
+                            <div class="silo-fill" style="height:${percent}%"></div>
+                            <div class="silo-overlay"></div>
+                            <div class="silo-text">
+                                <div class="percentage">${percent}%</div>
+                                <div class="amount">${silo.current_amount} / ${silo.capacity} ตัน</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            siloContainer.innerHTML = html;
+        }
+
+        function updateBranchInfo() {
+            if (selectedBranch && branches[selectedBranch]) {
+                const branch = branches[selectedBranch];
+                document.getElementById('current-branch-name').textContent = branch.name;
+                document.getElementById('current-branch-location').textContent = branch.location;
+            }
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('silo-chart').getContext('2d');
+            
+            if (siloChart) {
+                siloChart.destroy();
+            }
+            
+            if (!selectedBranch || !branches[selectedBranch] || !branches[selectedBranch].silos) {
+                return;
+            }
+            
+            const branch = branches[selectedBranch];
+            const siloNames = branch.silos.map(silo => silo.name);
+            const siloPercentages = branch.silos.map(silo => 
+                Math.round((silo.current_amount / silo.capacity) * 100)
+            );
+            
+            siloChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: siloNames,
+                    datasets: [{
+                        label: 'อัตราการใช้ (%)',
+                        data: siloPercentages,
+                        backgroundColor: '#0EA5E9',
+                        borderColor: '#0284C7',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'อัตราการใช้ (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize data
+        async function loadInitialData() {
+            try {
+                const branchesData = await fetchUserBranches();
+                
+                branches = {};
+                for (const branch of branchesData) {
+                    const branchDetail = await fetchBranchDetails(branch.id);
+                    branches[branch.id] = branchDetail;
+                    
+                    if (!selectedBranch) {
+                        selectedBranch = branch.id;
+                    }
+                }
+                
+                await renderBranches();
+                if (selectedBranch) {
+                    await renderSilos();
+                    updateBranchInfo();
+                    renderChart();
+                }
+
+                // Update username display
+                const username = sessionStorage.getItem('username') || localStorage.getItem('username') || 'ผู้ใช้งาน';
+                document.getElementById('username-display').textContent = username;
+                
+            } catch (error) {
+                console.error('Error loading initial data:', error);
+                document.getElementById('branch-list').innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--danger);">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>';
+            }
+        }
+
+        // Initialize when page loads
+        window.onload = function() {
+            loadInitialData();
+        };
+    </script>
 </body>
 </html>

@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overview - ระบบจัดการไซโลอัจฉริยะ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #F97316;
+            --primary-light: #FFEDD5;
+            --primary-dark: #EA580C;
+            --secondary: #0EA5E9;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --light: #FFF7ED;
+            --dark: #4B5563;
+            --white: #FFFFFF;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans Thai', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #FFF7ED 0%, #FFE4CC 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header with Navigation */
+        header {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            box-shadow: var(--shadow);
+            position: relative;
+            z-index: 100;
+        }
+
+        .header-top {
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-details {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+        }
+
+        .user-details img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Navigation Menu */
+        .main-nav {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-container {
+            padding: 0 2rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 0;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 1.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+            border-bottom-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--white);
+            border-bottom-color: var(--white);
+        }
+
+        .nav-link i {
+            font-size: 1.1rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-light);
+        }
+
+        .header-content h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .header-content p {
+            color: var(--dark);
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .total-silos-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 2px solid var(--primary-light);
+            min-width: 220px;
+        }
+
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .stats-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stats-number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            line-height: 1;
+        }
+
+        .stats-label {
+            font-size: 1rem;
+            color: var(--dark);
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        /* Summary Grid */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--primary-light);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(249, 115, 22, 0.15);
+        }
+
+        .summary-card.critical {
+            border-left: 4px solid var(--danger);
+            animation: pulse-alert 2s infinite;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            color: var(--dark);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .card-icon.primary { background: var(--primary-light); color: var(--primary); }
+        .card-icon.success { background: #D1FAE5; color: var(--success); }
+        .card-icon.warning { background: #FEF3C7; color: var(--warning); }
+        .card-icon.danger { background: #FEE2E2; color: var(--danger); }
+
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .card-description {
+            font-size: 0.9rem;
+            color: var(--dark);
+            opacity: 0.8;
+        }
+
+        /* Table Sections */
+        .table-section {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--primary-light);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 1.5rem;
+            background: linear-gradient(90deg, var(--primary-light) 0%, #FFEDD5 100%);
+            border-bottom: 1px solid #FDBA74;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-header h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--dark);
+            border: 1px solid #D1D5DB;
+        }
+
+        .btn-secondary:hover {
+            background: #F9FAFB;
+            border-color: var(--primary);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: var(--primary-light);
+            padding: 1.2rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--primary-dark);
+            border-bottom: 2px solid #FDBA74;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid #FED7AA;
+            color: var(--dark);
+            white-space: nowrap;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover {
+            background: #FFFBEB;
+        }
+
+        .alert-row {
+            background: #FEF2F2 !important;
+        }
+
+        .alert-row:hover {
+            background: #FECACA !important;
+        }
+
+        .alert-badge {
+            background: var(--danger);
+            color: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 120px;
+            height: 8px;
+            background: #FED7AA;
+            border-radius: 10px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0 0.75rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-normal {
+            background: #D1FAE5;
+            color: var(--success);
+        }
+
+        .status-critical {
+            background: #FEE2E2;
+            color: var(--danger);
+        }
+
+        .silo-color-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.75rem;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse-alert {
+            0%, 100% { 
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+            50% { 
+                box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-content {
+                padding: 1.5rem;
+            }
+            
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1.5rem;
+            }
+            
+            .header-stats {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-top {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-container {
+                padding: 0 1rem;
+            }
+            
+            .nav-menu {
+                flex-wrap: wrap;
+            }
+            
+            .nav-link {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .total-silos-card {
+                min-width: auto;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .section-actions {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-content h1 {
+                font-size: 1.8rem;
+            }
+            
+            .header-content p {
+                font-size: 1rem;
+            }
+            
+            .stats-number {
+                font-size: 1.8rem;
+            }
+            
+            .card-value {
+                font-size: 2rem;
+            }
+            
+            .data-table {
+                font-size: 0.8rem;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 0.75rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Navigation -->
+    <header>
+        <div class="header-top">
+            <div class="logo">
+                <i class="fas fa-warehouse"></i>
+                <span>ระบบจัดการไซโล</span>
+            </div>
+            <div class="user-info">
+                <div class="user-details">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=F97316&color=fff" alt="User">
+                    <span>ผู้ดูแลระบบ</span>
+                </div>
+                <a href="/logout" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>ออกจากระบบ</span>
+                </a>
+            </div>
+        </div>
+        
+        <nav class="main-nav">
+            <div class="nav-container">
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="/overview" class="nav-link active">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>ภาพรวมระบบ</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/admin/dashboard" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>แดชบอร์ด</span>
+                        </a>
+                    </li>
+                    <!-- เอา "จัดการผู้ใช้" และ "จัดการไซโล" ออก -->
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="header-content">
+                <h1>ภาพรวมระบบ</h1>
+                <p>ข้อมูลสรุปภาพรวมทั้งหมดของระบบจัดการไซโลอัจฉริยะ</p>
+            </div>
+            <div class="header-stats">
+                <div class="total-silos-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-warehouse"></i>
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number" id="total-silos-count">0</div>
+                        <div class="stats-label">ไซโลทั้งหมด</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="card-header">
+                    <div class="card-title">จำนวนสาขา</div>
+                    <div class="card-icon primary">
+                        <i class="fas fa-building"></i>
+                    </div>
+                </div>
+                <div class="card-value" id="total-branches">0</div>
+                <div class="card-description">สาขาทั้งหมดในระบบ</div>
+            </div>
+
+            <div class="summary-card">
+                <div class="card-header">
+                    <div class="card-title">จำนวนไซโล</div>
+                    <div class="card-icon success">
+                        <i class="fas fa-warehouse"></i>
+                    </div>
+                </div>
+                <div class="card-value" id="total-silos">0</div>
+                <div class="card-description">ไซโลทั้งหมดในระบบ</div>
+            </div>
+
+            <div class="summary-card">
+                <div class="card-header">
+                    <div class="card-title">การใช้ความจุทั้งหมด</div>
+                    <div class="card-icon warning">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                </div>
+                <div class="card-value" id="total-capacity-used">0%</div>
+                <div class="card-description">เฉลี่ยทั้งระบบ</div>
+            </div>
+
+            <div class="summary-card critical" id="total-alert-card" style="display: none;">
+                <div class="card-header">
+                    <div class="card-title">ไซโลปริมาณต่ำ</div>
+                    <div class="card-icon danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+                <div class="card-value" id="total-low-capacity">0</div>
+                <div class="card-description">ไซโลที่มีปริมาณต่ำกว่า 35%</div>
+            </div>
+        </div>
+
+        <!-- Branches Table -->
+        <div class="table-section">
+            <div class="section-header">
+                <h2>
+                    <i class="fas fa-building"></i>
+                    ข้อมูลสรุปตามสาขา
+                </h2>
+                <div class="section-actions">
+                    <button class="btn btn-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i>
+                        รีเฟรชข้อมูล
+                    </button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>สาขา</th>
+                            <th>จำนวนไซโล</th>
+                            <th>ความจุทั้งหมด</th>
+                            <th>ใช้ไปแล้ว</th>
+                            <th>อัตราการใช้</th>
+                            <th>ไซโลปริมาณต่ำ</th>
+                            <th>สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="branches-table-body">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- All Silos Table -->
+        <div class="table-section">
+            <div class="section-header">
+                <h2>
+                    <i class="fas fa-list"></i>
+                    ข้อมูลไซโลทั้งหมด
+                </h2>
+                <div class="section-actions">
+                    <button class="btn btn-primary" onclick="refreshSilos()">
+                        <i class="fas fa-sync-alt"></i>
+                        รีเฟรชข้อมูล
+                    </button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ไซโล</th>
+                            <th>สาขา</th>
+                            <th>ประเภทวัสดุ</th>
+                            <th>Site Code</th>
+                            <th>Device ID</th>
+                            <th>ความจุ</th>
+                            <th>ปริมาณปัจจุบัน</th>
+                            <th>อัตราการใช้</th>
+                            <th>สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="all-silos-table-body">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div style="color: white; margin-top: 1rem;">กำลังโหลดข้อมูล...</div>
+    </div>
+
+    <script>
+        // Global variables
+        let overviewData = {};
+        let allSilosData = [];
+
+        // Utility functions
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                background: ${type === 'success' ? '#10B981' : '#EF4444'};
+                color: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                z-index: 10000;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        // ฟังก์ชันตรวจสอบพื้นฐาน
+        function checkBasicSetup() {
+            console.log('🔍 Checking basic setup...');
+            
+            const requiredElements = [
+                'loadingOverlay',
+                'total-silos-count', 
+                'total-branches',
+                'total-silos',
+                'total-capacity-used',
+                'total-low-capacity',
+                'branches-table-body',
+                'all-silos-table-body'
+            ];
+            
+            requiredElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (!element) {
+                    console.error(`❌ Missing element: ${id}`);
+                } else {
+                    console.log(`✅ Found element: ${id}`);
+                }
+            });
+        }
+
+        // ฟังก์ชันทดสอบ API
+        async function testAPIEndpoints() {
+            console.log('🔍 Testing API endpoints...');
+            
+            try {
+                const response = await fetch('/api/volume_data');
+                console.log('📡 API Response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ API Data received:', data);
+                    console.log('📊 Data type:', typeof data);
+                    console.log('🔢 Data length:', Array.isArray(data) ? data.length : 'Not array');
+                    
+                    if (Array.isArray(data) && data.length > 0) {
+                        console.log('🎯 Sample data:', data[0]);
+                    }
+                } else {
+                    console.error('❌ API Error:', response.status, response.statusText);
+                }
+            } catch (error) {
+                console.error('❌ API Connection failed:', error);
+            }
+        }
+
+        // API Functions
+        async function fetchOverviewData() {
+            try {
+                console.log('🔄 Fetching overview data from API...');
+                const response = await fetch('/api/volume_data');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('📊 Overview API response:', data);
+                
+                if (!Array.isArray(data)) {
+                    throw new Error('Invalid data format from volume_data');
+                }
+                
+                return processOverviewData(data);
+                
+            } catch (error) {
+                console.error('❌ Error fetching overview data:', error);
+                return getDemoOverviewData();
+            }
+        }
+
+        async function fetchAllSilos() {
+            try {
+                console.log('🔄 Fetching all silos data...');
+                const response = await fetch('/api/volume_data');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('📋 All silos data response:', data);
+                
+                if (!Array.isArray(data)) {
+                    throw new Error('Invalid data format from volume_data');
+                }
+                
+                return data;
+                
+            } catch (error) {
+                console.error('❌ Error fetching all silos:', error);
+                return getDemoSilosData();
+            }
+        }
+
+        function processOverviewData(data) {
+            console.log('🔄 Processing volume data for overview:', data);
+            
+            const branchesMap = {};
+            let totalSilos = 0;
+            let totalCapacity = 0;
+            let totalUsed = 0;
+            let totalLowCapacity = 0;
+
+            if (Array.isArray(data)) {
+                data.forEach((silo, index) => {
+                    const province = silo.province || 'ไม่ทราบจังหวัด';
+                    
+                    if (!province || province.includes('deleted')) {
+                        return;
+                    }
+                    
+                    if (!branchesMap[province]) {
+                        branchesMap[province] = {
+                            name: province,
+                            siloCount: 0,
+                            totalCapacity: 0,
+                            totalUsed: 0,
+                            lowCapacityCount: 0
+                        };
+                    }
+                    
+                    const siloCapacity = silo.capacity || 1000;
+                    const currentAmount = silo.volume || 0;
+                    const percentage = (currentAmount / siloCapacity) * 100;
+                    const isLowCapacity = percentage < 35;
+                    
+                    branchesMap[province].siloCount++;
+                    branchesMap[province].totalCapacity += siloCapacity;
+                    branchesMap[province].totalUsed += currentAmount;
+                    
+                    if (isLowCapacity) {
+                        branchesMap[province].lowCapacityCount++;
+                        totalLowCapacity++;
+                    }
+                    
+                    totalSilos++;
+                    totalCapacity += siloCapacity;
+                    totalUsed += currentAmount;
+                });
+            } else {
+                console.warn('⚠️ Data is not an array, using demo data');
+                return getDemoOverviewData();
+            }
+
+            // Calculate percentages
+            Object.values(branchesMap).forEach(branch => {
+                if (branch.totalCapacity > 0) {
+                    branch.usagePercentage = Math.round((branch.totalUsed / branch.totalCapacity) * 100);
+                } else {
+                    branch.usagePercentage = 0;
+                }
+            });
+
+            const totalUsagePercentage = totalCapacity > 0 ? Math.round((totalUsed / totalCapacity) * 100) : 0;
+
+            console.log('✅ Processed overview data:', {
+                branches: branchesMap,
+                summary: {
+                    totalBranches: Object.keys(branchesMap).length,
+                    totalSilos: totalSilos,
+                    totalUsagePercentage: totalUsagePercentage,
+                    totalLowCapacity: totalLowCapacity,
+                    totalCapacity: totalCapacity,
+                    totalUsed: totalUsed
+                }
+            });
+
+            return {
+                branches: branchesMap,
+                summary: {
+                    totalBranches: Object.keys(branchesMap).length,
+                    totalSilos: totalSilos,
+                    totalUsagePercentage: totalUsagePercentage,
+                    totalLowCapacity: totalLowCapacity,
+                    totalCapacity: totalCapacity,
+                    totalUsed: totalUsed
+                }
+            };
+        }
+
+        function getDemoOverviewData() {
+            return {
+                branches: {
+                    'สระบุรี': { 
+                        name: 'สระบุรี', 
+                        siloCount: 3, 
+                        totalCapacity: 3000, 
+                        totalUsed: 1500, 
+                        lowCapacityCount: 1, 
+                        usagePercentage: 50 
+                    },
+                    'ราชบุรี': { 
+                        name: 'ราชบุรี', 
+                        siloCount: 2, 
+                        totalCapacity: 2000, 
+                        totalUsed: 1200, 
+                        lowCapacityCount: 0, 
+                        usagePercentage: 60 
+                    },
+                    'นครราชสีมา': { 
+                        name: 'นครราชสีมา', 
+                        siloCount: 2, 
+                        totalCapacity: 2000, 
+                        totalUsed: 800, 
+                        lowCapacityCount: 1, 
+                        usagePercentage: 40 
+                    }
+                },
+                summary: {
+                    totalBranches: 3,
+                    totalSilos: 7,
+                    totalUsagePercentage: 50,
+                    totalLowCapacity: 2,
+                    totalCapacity: 7000,
+                    totalUsed: 3500
+                }
+            };
+        }
+
+        function getDemoSilosData() {
+            return [
+                {
+                    device_id: 'DEV001',
+                    volume: 500,
+                    plant_type: 'ข้าวสาร',
+                    province: 'สระบุรี',
+                    site_code: 'SB001',
+                    silo_no: '1',
+                    capacity: 1000,
+                    volume_percentage: 50
+                },
+                {
+                    device_id: 'DEV002',
+                    volume: 750,
+                    plant_type: 'ข้าวโพด',
+                    province: 'สระบุรี',
+                    site_code: 'SB001',
+                    silo_no: '2',
+                    capacity: 1000,
+                    volume_percentage: 75
+                },
+                {
+                    device_id: 'DEV003',
+                    volume: 250,
+                    plant_type: 'ข้าวสาร',
+                    province: 'สระบุรี',
+                    site_code: 'SB002',
+                    silo_no: '1',
+                    capacity: 1000,
+                    volume_percentage: 25
+                },
+                {
+                    device_id: 'DEV004',
+                    volume: 600,
+                    plant_type: 'ข้าวสาร',
+                    province: 'ราชบุรี',
+                    site_code: 'RB001',
+                    silo_no: '1',
+                    capacity: 1000,
+                    volume_percentage: 60
+                },
+                {
+                    device_id: 'DEV005',
+                    volume: 600,
+                    plant_type: 'ข้าวโพด',
+                    province: 'ราชบุรี',
+                    site_code: 'RB001',
+                    silo_no: '2',
+                    capacity: 1000,
+                    volume_percentage: 60
+                },
+                {
+                    device_id: 'DEV006',
+                    volume: 400,
+                    plant_type: 'ข้าวสาร',
+                    province: 'นครราชสีมา',
+                    site_code: 'NK001',
+                    silo_no: '1',
+                    capacity: 1000,
+                    volume_percentage: 40
+                },
+                {
+                    device_id: 'DEV007',
+                    volume: 400,
+                    plant_type: 'ข้าวโพด',
+                    province: 'นครราชสีมา',
+                    site_code: 'NK001',
+                    silo_no: '2',
+                    capacity: 1000,
+                    volume_percentage: 40
+                }
+            ];
+        }
+
+        // UI Functions
+        function updateSummaryCards(data) {
+            console.log('🎯 Updating summary cards with:', data.summary);
+            
+            const summary = data.summary;
+            
+            document.getElementById('total-branches').textContent = summary.totalBranches || 0;
+            document.getElementById('total-silos').textContent = summary.totalSilos || 0;
+            document.getElementById('total-capacity-used').textContent = (summary.totalUsagePercentage || 0) + '%';
+            document.getElementById('total-low-capacity').textContent = summary.totalLowCapacity || 0;
+            
+            document.getElementById('total-silos-count').textContent = summary.totalSilos || 0;
+            
+            const alertCard = document.getElementById('total-alert-card');
+            if (summary.totalLowCapacity > 0) {
+                alertCard.style.display = 'block';
+                console.log('⚠️ Showing alert card');
+            } else {
+                alertCard.style.display = 'none';
+            }
+            
+            console.log('✅ Summary cards updated');
+        }
+
+        function renderBranchesTable(branches) {
+            console.log('🏢 Rendering branches table with:', Object.keys(branches).length, 'branches');
+            
+            const container = document.getElementById('branches-table-body');
+            if (!container) {
+                console.error('❌ branches-table-body container not found!');
+                return;
+            }
+            
+            let html = '';
+            
+            if (!branches || Object.keys(branches).length === 0) {
+                html = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 2rem; color: var(--dark);">
+                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                            <div>ไม่มีข้อมูลสาขา</div>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                Object.values(branches).forEach((branch, index) => {
+                    const name = branch.name || 'ไม่ทราบสาขา';
+                    const siloCount = branch.siloCount || 0;
+                    const totalCapacity = branch.totalCapacity || 0;
+                    const totalUsed = branch.totalUsed || 0;
+                    const usagePercentage = branch.usagePercentage || 0;
+                    const lowCapacityCount = branch.lowCapacityCount || 0;
+                    
+                    const hasAlert = lowCapacityCount > 0;
+                    const status = hasAlert ? 'มีแจ้งเตือน' : 'ปกติ';
+                    
+                    html += `
+                        <tr class="${hasAlert ? 'alert-row' : ''}">
+                            <td>
+                                <strong>${name}</strong>
+                                ${hasAlert ? '<span class="alert-badge">⚠️</span>' : ''}
+                            </td>
+                            <td>${siloCount}</td>
+                            <td>${totalCapacity.toLocaleString()} ตัน</td>
+                            <td>${totalUsed.toLocaleString()} ตัน</td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${usagePercentage}%"></div>
+                                </div>
+                                ${usagePercentage}%
+                            </td>
+                            <td>
+                                ${lowCapacityCount > 0 ? 
+                                    `<span style="color: var(--danger); font-weight: 600;">${lowCapacityCount} ไซโล</span>` : 
+                                    '<span style="color: var(--success);">0 ไซโล</span>'
+                                }
+                            </td>
+                            <td>
+                                <span class="status-indicator ${hasAlert ? 'status-critical' : 'status-normal'}">
+                                    ${hasAlert ? '<i class="fas fa-exclamation-circle"></i>' : '<i class="fas fa-check-circle"></i>'}
+                                    ${status}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            container.innerHTML = html;
+            console.log('✅ Branches table rendered');
+        }
+
+        function renderAllSilosTable(silos) {
+            console.log('📋 Rendering all silos table with:', silos.length, 'silos');
+            
+            const container = document.getElementById('all-silos-table-body');
+            if (!container) {
+                console.error('❌ all-silos-table-body container not found!');
+                return;
+            }
+            
+            let html = '';
+            
+            if (!silos || silos.length === 0) {
+                html = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 2rem; color: var(--dark);">
+                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                            <div>ไม่มีข้อมูลไซโล</div>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                const colors = ['#F97316', '#0EA5E9', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#84CC16'];
+                const colorMap = new Map();
+                
+                silos.forEach((silo, index) => {
+                    const siloName = `ไซโล ${silo.silo_no}`;
+                    if (!colorMap.has(siloName)) {
+                        const colorIndex = colorMap.size % colors.length;
+                        colorMap.set(siloName, colors[colorIndex]);
+                    }
+                    const color = colorMap.get(siloName);
+                    
+                    const percentage = silo.volume_percentage || Math.round((silo.volume / silo.capacity) * 100);
+                    const isLowCapacity = percentage < 35;
+                    const status = isLowCapacity ? 'ปริมาณต่ำ' : 'ปกติ';
+                    
+                    html += `
+                        <tr class="${isLowCapacity ? 'alert-row' : ''}">
+                            <td>
+                                <span class="silo-color-indicator" style="background: ${color}"></span>
+                                <strong>${siloName}</strong>
+                            </td>
+                            <td>${silo.province || 'ไม่ทราบสาขา'}</td>
+                            <td>${silo.plant_type || 'ไม่ทราบประเภท'}</td>
+                            <td>${silo.site_code || 'N/A'}</td>
+                            <td><code>${silo.device_id}</code></td>
+                            <td>${silo.capacity ? silo.capacity.toLocaleString() : '0'} ตัน</td>
+                            <td>${silo.volume ? silo.volume.toLocaleString() : '0'} ตัน</td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${percentage}%"></div>
+                                </div>
+                                ${percentage}%
+                            </td>
+                            <td>
+                                <span class="status-indicator ${isLowCapacity ? 'status-critical' : 'status-normal'}">
+                                    ${isLowCapacity ? '<i class="fas fa-exclamation-circle"></i>' : '<i class="fas fa-check-circle"></i>'}
+                                    ${status}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            container.innerHTML = html;
+            console.log('✅ All silos table rendered');
+        }
+
+        // Refresh functions
+        async function refreshData() {
+            await loadOverviewData();
+        }
+
+        async function refreshSilos() {
+            await loadAllSilos();
+        }
+
+        // Initialize data
+        async function loadOverviewData() {
+            console.log('🔄 Starting to load overview data...');
+            showLoading();
+            
+            try {
+                overviewData = await fetchOverviewData();
+                console.log('📊 Overview data received:', overviewData);
+                
+                if (overviewData && overviewData.branches) {
+                    updateSummaryCards(overviewData);
+                    renderBranchesTable(overviewData.branches);
+                    console.log('✅ Overview data loaded successfully');
+                } else {
+                    throw new Error('Invalid data structure');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error in loadOverviewData:', error);
+                showToast('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'error');
+                
+                const demoData = getDemoOverviewData();
+                updateSummaryCards(demoData);
+                renderBranchesTable(demoData.branches);
+                showToast('กำลังแสดงข้อมูลตัวอย่าง', 'info');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function loadAllSilos() {
+            console.log('🔄 Starting to load all silos data...');
+            showLoading();
+            
+            try {
+                allSilosData = await fetchAllSilos();
+                console.log('📋 All silos data received:', allSilosData);
+                
+                if (Array.isArray(allSilosData)) {
+                    renderAllSilosTable(allSilosData);
+                    console.log('✅ All silos data loaded successfully');
+                } else {
+                    throw new Error('Invalid silos data format');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error in loadAllSilos:', error);
+                showToast('เกิดข้อผิดพลาดในการโหลดข้อมูลไซโล', 'error');
+                
+                const demoSilos = getDemoSilosData();
+                renderAllSilosTable(demoSilos);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // ฟังก์ชันเริ่มต้นหลัก
+        async function initializePage() {
+            console.log('🚀 Initializing overview page...');
+            
+            checkBasicSetup();
+            await testAPIEndpoints();
+            await loadOverviewData();
+            await loadAllSilos();
+            
+            console.log('✅ Page initialization complete');
+        }
+
+        // เพิ่มปุ่มรีเฟรชแบบ manual
+        function addManualRefresh() {
+            const headerStats = document.querySelector('.header-stats');
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 DOM Content Loaded');
+            addManualRefresh();
+            initializePage();
+            
+            // Set up periodic refresh every 30 seconds
+            setInterval(() => {
+                if (!document.hidden) {
+                    loadOverviewData();
+                    loadAllSilos();
+                }
+            }, 30000);
+        });
+
+        // Handle page visibility change
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                loadOverviewData();
+                loadAllSilos();
+            }
+        });
+    </script>
+</body>
+</html>
