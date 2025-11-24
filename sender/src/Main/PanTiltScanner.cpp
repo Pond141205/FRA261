@@ -108,7 +108,7 @@ void PanTiltScanner::DriveToAbsoluteZero() {
         long steps = _PitchDegToSteps(error);
         if (INVERT_PITCH_HOMING) steps = -steps; // Apply Tested Inversion
 
-        if (abs(steps) < 10) steps = (steps > 0) ? 10 : -10;
+        if (abs(steps) < 50) steps = (steps > 0) ? 50 : -50;
 
         _pitchStepper.move(steps);
         while (_pitchStepper.distanceToGo() != 0) _pitchStepper.run();
@@ -183,6 +183,16 @@ void PanTiltScanner::run()
 {
   _handleStatusLED();
 
+  // // >>> NEW: If a Lidar error occurs, force state to FINISHED (or add an ERROR state)
+  // if (_lidarError && _state != IDLE && _state != FINISHED) {
+  //     Serial.println("!!! CRITICAL Lidar Error Detected. Stopping Scan. !!!");
+  //     _state = FINISHED; 
+  //     // Stop steppers immediately to avoid runaway motion
+  //     _yawStepper.stop();
+  //     _pitchStepper.stop();
+  //     // The FINISHED state logic will clean up the task and disable motors
+  // }
+
   if (_ENABLE_PIN != -1) {
     if (_state == IDLE || _state == FINISHED || _errorState) {
       digitalWrite(_ENABLE_PIN, HIGH); 
@@ -221,7 +231,11 @@ void PanTiltScanner::run()
       break;
     case SCANNING_FWD:
       if (current_yaw_steps >= _yaw_end_deg) {
-        _yawStepper.stop(); 
+        _yawStepper.stop();
+        _yawStepper.setCurrentPosition(_yawStepper.currentPosition());
+        _yawStepper.setSpeed(0);
+
+        //_yawStepper.stop(); 
         _state = CHANGING_ROW; 
         _current_pitch_target_deg += _pitch_step_deg; 
         _pitchStepper.moveTo(_PitchDegToSteps(_current_pitch_target_deg)); 
@@ -229,7 +243,11 @@ void PanTiltScanner::run()
       break;
     case SCANNING_REV:
       if (current_yaw_steps <= _yaw_start_deg) {
-        _yawStepper.stop(); 
+        _yawStepper.stop();
+        _yawStepper.setCurrentPosition(_yawStepper.currentPosition());
+        _yawStepper.setSpeed(0);
+
+        //_yawStepper.stop(); 
         _state = CHANGING_ROW; 
         _current_pitch_target_deg += _pitch_step_deg; 
         _pitchStepper.moveTo(_PitchDegToSteps(_current_pitch_target_deg)); 
@@ -243,6 +261,11 @@ void PanTiltScanner::run()
           _yawStepper.moveTo(0);   
           _state = RETURNING_HOME; 
         } else {
+
+          _yawStepper.stop();
+          _yawStepper.setCurrentPosition(_yawStepper.currentPosition());
+          _yawStepper.setSpeed(0);
+
           if (_is_scanning_fwd) { 
              _is_scanning_fwd = false;
              _yawStepper.setSpeed(-_scan_speed_yaw); 
