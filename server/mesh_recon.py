@@ -1,209 +1,173 @@
 import open3d as o3d
 import numpy as np
-import copy
+import matplotlib.pyplot as plt
+from scipy.spatial import Delaunay
+import random
 
-def fit_circle_ransac(points_2d, iterations=5000, threshold=0.5):
-    """
-    หาจุดศูนย์กลางและรัศมีของไซโล (RANSAC)
-    """
-    best_circle = None
-    best_inliers = 0
-    n_points = len(points_2d)
-    
-    print(f"Fitting circle to {n_points} points...")
-    
-    if n_points < 10: return None
+def read_custom_xyz(filepath):
+    points = []
+    with open(filepath, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            parts = line.strip().split()
+            if len(parts) >= 3:
+                try:
+                    points.append([float(parts[-3]), float(parts[-2]), float(parts[-1])])
+                except ValueError:
+                    continue
+    return np.array(points)
 
+def fit_circle_ransac(x, y, fixed_radius, iterations=5000, threshold=0.5):
+    best_center = (np.mean(x), np.mean(y))
+    max_inliers = -1
+    n_points = len(x)
+    if n_points < 3: return best_center
     for _ in range(iterations):
-        idx = np.random.choice(n_points, 3, replace=False)
-        p1, p2, p3 = points_2d[idx]
-        
-        temp = p2[0]**2 + p2[1]**2
-        bc = (p1[0]**2 + p1[1]**2 - temp) / 2
-        cd = (temp - p3[0]**2 - p3[1]**2) / 2
-        det = (p1[0] - p2[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p2[1])
-        
-        if abs(det) < 1e-6: continue
-        
-        cx = (bc*(p2[1] - p3[1]) - cd*(p1[1] - p2[1])) / det
-        cy = ((p1[0] - p2[0])*cd - (p2[0] - p3[0])*bc) / det
-        radius = np.sqrt((p1[0] - cx)**2 + (p1[1] - cy)**2)
-        
-        # กรองรัศมีที่เพี้ยนเกินจริง (เช่น < 10cm หรือ > 150cm)
-        if radius < 10 or radius > 150: continue
-
-        dists = np.sqrt((points_2d[:, 0] - cx)**2 + (points_2d[:, 1] - cy)**2)
-        inliers = np.sum(np.abs(dists - radius) < threshold)
-        
-        if inliers > best_inliers:
-            best_inliers = inliers
-            best_circle = (cx, cy, radius)
-            
-    return best_circle
-
-def process_silo_high_fidelity(filename, manual_diameter_cm=None, grid_res=0.5):
-    print(f"Loading {filename}...")
-    try:
-        pcd = o3d.io.read_point_cloud(filename)
-    except:
         try:
-            pts = np.loadtxt(filename)
-            pcd = o3d.geometry.PointCloud()
-            pcd.points = o3d.utility.Vector3dVector(pts[:, :3])
-        except Exception as e:
-            print(f"Error: {e}")
-            return
+            idx = random.sample(range(n_points), 2)
+            p1, p2 = np.array([x[idx[0]], y[idx[0]]]), np.array([x[idx[1]], y[idx[1]]])
+            d2 = np.sum((p1 - p2)**2)
+            dist = np.sqrt(d2)
+            if dist > 2 * fixed_radius or dist == 0: continue
+            mid = (p1 + p2) / 2
+            h = np.sqrt(max(0, fixed_radius**2 - (dist/2)**2))
+            dx, dy = p2[0] - p1[0], p2[1] - p1[1]
+            for cx, cy in [(mid[0] - h * (dy/dist), mid[1] + h * (dx/dist)), (mid[0] + h * (dy/dist), mid[1] - h * (dx/dist))]:
+                dists = np.sqrt((x - cx)**2 + (y - cy)**2)
+                curr = np.sum(np.abs(dists - fixed_radius) < threshold)
+                if curr > max_inliers:
+                    max_inliers = curr
+                    best_center = (cx, cy)
+        except: continue
+    return best_center
 
-    if len(pcd.points) == 0: return
+def create_synthetic_wall_ring(cx, cy, radius, z_base, num_points=100):
+    theta = np.linspace(0, 2*np.pi, num_points, endpoint=False)
+    wall_x = cx + radius * np.cos(theta)
+    wall_y = cy + radius * np.sin(theta)
+    wall_z = np.full(num_points, z_base)
+    return np.column_stack((wall_x, wall_y, wall_z))
 
-    points = np.asarray(pcd.points)
-    
-    # -------------------------------------------------------
-    # 1. หาจุดศูนย์กลางและตัดขอบ
-    # -------------------------------------------------------
-    points_xy = points[:, :2]
-    
-    if manual_diameter_cm:
-        # ถ้ามีขนาดจริง ใช้จุดกึ่งกลางจาก RANSAC เพื่อความแม่นยำตำแหน่ง
-        circle = fit_circle_ransac(points_xy)
-        if circle:
-            cx, cy, _ = circle
-            radius = manual_diameter_cm / 2.0
-        else:
-            cx, cy = np.median(points_xy[:, 0]), np.median(points_xy[:, 1])
-            radius = manual_diameter_cm / 2.0
-    else:
-        circle = fit_circle_ransac(points_xy)
-        if circle:
-            cx, cy, radius = circle
-        else:
-            cx, cy = np.median(points_xy[:, 0]), np.median(points_xy[:, 1])
-            radius = 30.0 # Default
-
-    print(f"Using Center: ({cx:.2f}, {cy:.2f}), Radius: {radius:.2f} cm")
-
-    # ตัดจุดที่อยู่นอกวงกลมทิ้ง (Margin 1.5 cm)
-    safe_radius = radius - 1.5
-    dists = np.sqrt((points[:, 0] - cx)**2 + (points[:, 1] - cy)**2)
-    
-    points_inside = points[dists < safe_radius]
-    points_outside = points[dists >= safe_radius] # เก็บไว้โชว์เป็นขยะ
-
-    # -------------------------------------------------------
-    # 2. Grid Max Z Filtering (High Res: 0.5 cm)
-    # -------------------------------------------------------
-    print(f"Filtering Surface with Grid Resolution: {grid_res} cm...")
-    
-    grid_map = {}
-    noise_points = [] 
-
-    for p in points_inside:
-        x, y, z = p
-        # คำนวณ Index ของตาราง
-        grid_x = int(np.floor(x / grid_res))
-        grid_y = int(np.floor(y / grid_res))
-        key = (grid_x, grid_y)
-        
-        if key not in grid_map:
-            grid_map[key] = p
-        else:
-            # เก็บเฉพาะจุดที่สูงที่สุดในช่องตารางนั้น
-            if z > grid_map[key][2]:
-                noise_points.append(grid_map[key]) 
-                grid_map[key] = p
-            else:
-                noise_points.append(p) 
-
-    surface_points = np.array(list(grid_map.values()))
-    print(f"Final Surface Points: {len(surface_points)}")
-
-    # รวมขยะเพื่อแสดงผล (จุดนอกวง + จุดที่จม)
-    all_waste = []
-    if len(points_outside) > 0: all_waste.append(points_outside)
-    if len(noise_points) > 0: all_waste.append(np.array(noise_points))
-    
-    pcd_surface = o3d.geometry.PointCloud()
-    pcd_surface.points = o3d.utility.Vector3dVector(surface_points)
-    
-    pcd_waste = o3d.geometry.PointCloud()
-    if len(all_waste) > 0:
-        pcd_waste.points = o3d.utility.Vector3dVector(np.vstack(all_waste))
-
-    # [DEBUG] แสดงจุดก่อนทำ Mesh
-    # เขียว = ผิวปูนที่คัดมา
-    pcd_surface.paint_uniform_color([0, 1, 0]) 
-    # แดง = ขยะที่ทิ้งไป
-    pcd_waste.paint_uniform_color([1, 0, 0])   
-    # o3d.visualization.draw_geometries([pcd_surface, pcd_waste], window_name="Debug: Green=Surface, Red=Noise")
-
-    # -------------------------------------------------------
-    # 3. สร้างฝาปิด (Lid)
-    # -------------------------------------------------------
-    max_z_sensor = np.max(points[:, 2])
-    # ฝาปิดละเอียดเท่ากับ Grid เพื่อความเนียน
-    lid_res = grid_res 
-    x_range = np.arange(cx - radius, cx + radius, lid_res)
-    y_range = np.arange(cy - radius, cy + radius, lid_res)
-    
-    lid_points = []
-    for lx in x_range:
-        for ly in y_range:
-            if (lx - cx)**2 + (ly - cy)**2 <= radius**2:
-                lid_points.append([lx, ly, max_z_sensor])
-    
-    pcd_lid = o3d.geometry.PointCloud()
-    pcd_lid.points = o3d.utility.Vector3dVector(np.array(lid_points))
-
-    # -------------------------------------------------------
-    # 4. สร้าง Mesh (High Depth Poisson)
-    # -------------------------------------------------------
-    pcd_final = pcd_surface + pcd_lid
-    # รัศมี Search สำหรับ Normal ต้องเหมาะสมกับ Grid Res
-    pcd_final.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=5.0, max_nn=30))
-    pcd_final.orient_normals_consistent_tangent_plane(100)
-
-    print("Reconstructing High Fidelity Mesh (Depth=11)...")
-    # depth=11 ให้รายละเอียดสูง เหมาะกับ Grid 0.5 cm
-    mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
-        pcd_final, depth=11, width=0, scale=1.1, linear_fit=False
-    )
-    
-    # ตัดขอบ Mesh ที่เกินออกมา (Trim Low Density)
-    densities = np.asarray(densities)
-    # ตัดน้อยๆ (0.5%) เพื่อเก็บขอบไว้
-    density_threshold = np.percentile(densities, 0.5) 
-    mesh.remove_vertices_by_mask(densities < density_threshold)
-
-    # -------------------------------------------------------
-    # 5. คำนวณปริมาตร
-    # -------------------------------------------------------
-    if not mesh.is_watertight():
-        print("Info: Closing minor holes with Convex Hull...")
-        mesh, _ = mesh.compute_convex_hull()
-        
-    volume_cm3 = mesh.get_volume()
-    volume_m3 = volume_cm3 / 1_000_000.0
-    volume_liters = volume_cm3 / 1000.0
-
-    print("="*40)
-    print(f"Measured Empty Volume: {volume_m3:.6f} m3")
-    print(f"Measured Empty Volume: {volume_liters:.2f} Liters")
-    print("="*40)
-
-    # --- Visualization ---
+def create_extruded_wall_mesh(cx, cy, radius, z_bottom, z_top, segments=100):
+    vertices = []
+    triangles = []
+    for i in range(segments):
+        theta = 2 * np.pi * i / segments
+        x = cx + radius * np.cos(theta)
+        y = cy + radius * np.sin(theta)
+        vertices.append([x, y, z_bottom])
+    for i in range(segments):
+        theta = 2 * np.pi * i / segments
+        x = cx + radius * np.cos(theta)
+        y = cy + radius * np.sin(theta)
+        vertices.append([x, y, z_top])
+    for i in range(segments):
+        current = i
+        next_i = (i + 1) % segments
+        b1, b2 = current, next_i
+        t1, t2 = current + segments, next_i + segments
+        triangles.append([b1, t1, t2])
+        triangles.append([b1, t2, b2])
+    mesh = o3d.geometry.TriangleMesh()
+    mesh.vertices = o3d.utility.Vector3dVector(vertices)
+    mesh.triangles = o3d.utility.Vector3iVector(triangles)
     mesh.compute_vertex_normals()
-    mesh.paint_uniform_color([0.1, 0.7, 1.0]) # สีฟ้า
-    wireframe = o3d.geometry.LineSet.create_from_triangle_mesh(mesh)
-    wireframe.paint_uniform_color([0.1, 0.1, 0.1])
-    
-    # โชว์เทียบกับจุดผิวปูนสีเขียว (เพื่อให้เห็นว่า Mesh ทับจุดพอดีไหม)
-    pcd_surface.paint_uniform_color([0, 1, 0])
-    
-    o3d.visualization.draw_geometries([mesh, wireframe, pcd_surface], window_name="High Fidelity Result")
-    
-    return volume_m3
+    return mesh
 
-# --- Run ---
-filename = "S001_01-20251122_09_CMD.xyz"
-# ใช้ Grid Res 0.5 cm ตามที่ตกลงกันครับ
-process_silo_high_fidelity(filename, manual_diameter_cm=50.0, grid_res=0.5)
+# --- NEW FUNCTION: สร้างฝาปิด (Cap) ---
+def create_lid_mesh(cx, cy, radius, z_height, segments=100):
+    vertices = [[cx, cy, z_height]] # จุดกึ่งกลาง (index 0)
+    for i in range(segments):
+        theta = 2 * np.pi * i / segments
+        x = cx + radius * np.cos(theta)
+        y = cy + radius * np.sin(theta)
+        vertices.append([x, y, z_height])
+        
+    triangles = []
+    for i in range(segments):
+        # เชื่อมจุดกึ่งกลาง (0) กับจุดขอบ i+1 และจุดขอบถัดไป
+        v1 = i + 1
+        v2 = (i + 1) % segments + 1 if (i + 1) < segments else 1
+        triangles.append([0, v1, v2])
+        
+    mesh = o3d.geometry.TriangleMesh()
+    mesh.vertices = o3d.utility.Vector3dVector(vertices)
+    mesh.triangles = o3d.utility.Vector3iVector(triangles)
+    mesh.compute_vertex_normals()
+    mesh.paint_uniform_color([0.8, 0.2, 0.2]) # สีแดงเหมือนผนัง
+    return mesh
+
+def process_silo_extruded_with_cap(pcd_points, silo_diameter_cm=59.0, grid_res=1.0):
+    # 1. Init
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(pcd_points)
+    pcd_denoised, _ = pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
+    points_clean = np.asarray(pcd_denoised.points)
+    
+    # *** FIX: หาความสูงปากถังจากข้อมูลดิบทั้งหมด ***
+    z_max_scan = np.max(points_clean[:, 2])+21.5
+    print(f"Detected Silo Top Height: {z_max_scan:.2f}")
+
+    # 2. Find Center
+    x = points_clean[:, 0]
+    y = points_clean[:, 1]
+    rough_cx, rough_cy = np.median(x), np.median(y)
+    dist_rough = np.sqrt((x - rough_cx)**2 + (y - rough_cy)**2)
+    wall_mask = dist_rough > np.percentile(dist_rough, 80)
+    target_radius = silo_diameter_cm / 2.0
+    cx, cy = fit_circle_ransac(x[wall_mask], y[wall_mask], target_radius)
+    print(f"Center: ({cx:.2f}, {cy:.2f})")
+
+    # 3. Filter Cement
+    dist_final = np.sqrt((x - cx)**2 + (y - cy)**2)
+    mask_cement = dist_final <= (target_radius * 0.85)
+    points_cement = points_clean[mask_cement]
+
+    # 4. Max Z Filter
+    grid_dict = {}
+    for p in points_cement:
+        gx = int(np.round(p[0]/grid_res))
+        gy = int(np.round(p[1]/grid_res))
+        if (gx,gy) not in grid_dict or p[2] > grid_dict[(gx,gy)][2]:
+            grid_dict[(gx,gy)] = p
+    surface_pts = np.array(list(grid_dict.values()))
+
+    # --- 5. CEMENT MESH ---
+    avg_cement_z = np.mean(surface_pts[:, 2])
+    wall_points_bottom = create_synthetic_wall_ring(cx, cy, target_radius, avg_cement_z, num_points=100)
+    combined_points = np.vstack((surface_pts, wall_points_bottom))
+    tri = Delaunay(combined_points[:, :2])
+    
+    mesh_cement = o3d.geometry.TriangleMesh()
+    mesh_cement.vertices = o3d.utility.Vector3dVector(combined_points)
+    mesh_cement.triangles = o3d.utility.Vector3iVector(tri.simplices)
+    mesh_cement.compute_vertex_normals()
+    mesh_cement.paint_uniform_color([0.2, 0.8, 0.2]) # สีเขียว
+
+    # --- 6. EXTRUDE WALL & CAP ---
+    # สร้างผนัง
+    mesh_wall = create_extruded_wall_mesh(cx, cy, target_radius, avg_cement_z, z_max_scan)
+    mesh_wall.paint_uniform_color([0.8, 0.2, 0.2]) # สีแดง
+    
+    # สร้างฝาปิด (Lid)
+    mesh_lid = create_lid_mesh(cx, cy, target_radius, z_max_scan)
+    
+    # Volume
+    cell_area = grid_res**2
+    vol = sum([max(0, z_max_scan - p[2])*cell_area for p in surface_pts])
+    total_vol = vol / (0.85**2)
+
+    return mesh_cement, mesh_wall, mesh_lid, total_vol
+
+# --- RUN ---
+filename = "S001_01-20251123_17_CMD.xyz"
+try:
+    raw = read_custom_xyz(filename)
+    if len(raw) > 0:
+        mesh_c, mesh_w, mesh_l, vol = process_silo_extruded_with_cap(raw, silo_diameter_cm=59)
+        print(f"Estimated Total Volume: {vol/1000:.2f} Liters")
+        
+        # แสดงผล: ผิวปูน + ผนัง + ฝาปิด
+        o3d.visualization.draw_geometries([mesh_c, mesh_w, mesh_l], window_name="Extruded Wall with Cap")
+except Exception as e:
+    print(f"Error: {e}")
