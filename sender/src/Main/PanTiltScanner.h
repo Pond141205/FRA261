@@ -1,3 +1,4 @@
+
 #ifndef PAN_TILT_SCANNER_H
 #define PAN_TILT_SCANNER_H
 
@@ -13,7 +14,7 @@
 // ==========================================
 // The angle the encoder reads when the machine is at "Home"
 #define YAW_HOME_ANGLE   288.0 
-#define PITCH_HOME_ANGLE 61.0
+#define PITCH_HOME_ANGLE 66.0
 
 // Homing Direction Logic (True = Flip direction)
 #define INVERT_YAW_HOMING   true  
@@ -56,6 +57,7 @@ public:
   bool GetNextPoint(XYZPoint &point); 
   size_t getQueueSize();
   ScanState getState(); 
+  bool isLidarError() { return _lidarError; }
 
   // --- CLOSED LOOP FUNCTIONS ---
   void DriveToAbsoluteZero(); // Uses the 288/61 Targets
