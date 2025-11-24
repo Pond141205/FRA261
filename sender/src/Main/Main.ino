@@ -76,21 +76,43 @@ void setup() {
 
   pinMode(STATUS_LED_PIN, OUTPUT);
   pinMode(ENABLE_PIN, OUTPUT);
+
+  bool encoderYawOK = false;
+  bool encoderPitchOK = false;
   
   // 1. Initialize Encoders
   // Yaw (Default I2C)
-  Wire.begin(21, 22);           
-  if (!encoderYaw.begin()) Serial.println("Yaw Encoder Missing");
-
-  // Pitch (Secondary I2C)
+  Wire.begin(21, 22); 
+    if (!encoderYaw.begin()) {
+      Serial.println("Yaw Encoder Failure.");
+      logError("Critical Startup Error: Yaw Encoder Failure.");
+      // We defer error sending until WiFi is up, but this is a fatal halt
+    } else {
+        encoderYawOK = true;
+    }
+    
   I2Ctwo.begin(13, 14, 400000); 
-  if (!encoderPitch.begin()) Serial.println("Pitch Encoder Missing");
+  if (!encoderPitch.begin()) {
+    Serial.println("Pitch Encoder Failure!");
+    logError("Critical Startup Error: Pitch Encoder Failure.");
+    // We defer error sending until WiFi is up, but this is a fatal halt
+  } else {
+      encoderPitchOK = true;
+  }
 
-  // 2. Network & Time
-  digitalWrite(ENABLE_PIN, HIGH); // Disable motors
+  // Critical Halt if Encoders Fail
+  if (!encoderYawOK || !encoderPitchOK) {
+    logError("CRITICAL: Encoder(s) missing. Halting system.");
+    digitalWrite(STATUS_LED_PIN, LOW); // Indicate Failure with LED OFF
+    digitalWrite(ENABLE_PIN, HIGH); // Motors Disabled
+    while(1); 
+  }
+
+  digitalWrite(ENABLE_PIN, HIGH); // Disable motors while connecting
   digitalWrite(STATUS_LED_PIN, HIGH);
   connectWiFi();
   timeInit();
+
 
   // 3. Initialize Scanner with Encoders
   // NOTE: Pass pointers (&) to the encoder objects
@@ -119,6 +141,13 @@ unsigned long lastTimeCheck = 0;
 void loop() {
   // 1. Run Steppers
   scanner.run();
+
+  // if (isRecording && scanner.isLidarError()) {
+  //   logError("Lidar failed during scan. Forcing scan termination.");
+  //   // Force state to FINISHED to trigger data saving/upload logic
+  //   // The scanner.run() already sets the state to FINISHED, 
+  //   // but the main loop needs to be aware to finish the process.
+  // }
 
   // 2. Process Lidar Data
   if (isRecording && scanner.hasNewLidarData()) {
@@ -287,6 +316,7 @@ bool uploadFileInBatches(const char* filename, const char* batch_id) {
 
 bool sendChunk(int chunk_id, int total_chunks, uint8_t* dataBuffer, size_t bytesToSend, const char* batch_id) {
   int attempt = 0;
+  char logBuffer[256];
   while (attempt < 3) {
     if (WiFi.status() != WL_CONNECTED) connectWiFi();
     WiFiClientSecure secureClient;
@@ -300,8 +330,22 @@ bool sendChunk(int chunk_id, int total_chunks, uint8_t* dataBuffer, size_t bytes
     http.addHeader("X-Chunk-ID", String(chunk_id));
     http.addHeader("X-Total-Chunks", String(total_chunks));
     int httpCode = http.POST(dataBuffer, bytesToSend);
-    http.end();
-    if (httpCode == 200) return true;
+
+    if (httpCode > 0) {
+      String response = http.getString();
+      http.end(); 
+      
+      if (httpCode == 200) { // 200 OK
+        return true; // Success
+      } else {
+        sprintf(logBuffer, "[Chunk %d] Server error (HTTP %d): %s", chunk_id, httpCode, response.c_str());
+        logError(logBuffer);
+      }
+    } else {
+        http.end();
+        sprintf(logBuffer, "[Chunk %d] HTTP failed: %s", chunk_id, http.errorToString(httpCode).c_str());
+        logError(logBuffer);
+    }
     attempt++;
     delay(2000);
   }
